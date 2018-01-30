@@ -39,7 +39,28 @@ const tempFile = function(str) {
 };
 
 const renameTmpNix = function(src, dst, cb) {
-  fs.rename(src, dst, cb);
+  fs.rename(src, dst, (err) => {
+    if (err) {
+      if (err.code === 'EXDEV') {
+        // Cannot rename across devices.
+        copyAndUnlink();
+      } else {
+        cb(err);
+      }
+      return;
+    }
+    cb(null);
+  });
+
+  function copyAndUnlink() {
+    var readStream = fs.createReadStream(src);
+    var writeStream = fs.createWriteStream(dst);
+
+    readStream.on('error', cb);
+    writeStream.on('error', cb);
+    readStream.on('close', () => fs.unlink(src, () => {}));
+    readStream.pipe(writeStream);
+  }
 }
 
 const renameTmpWindows = function(src, dst, cb) {
