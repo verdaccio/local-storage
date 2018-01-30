@@ -38,18 +38,11 @@ const tempFile = function(str) {
   return `${str}.tmp${String(Math.random()).substr(2)}`;
 };
 
-const renameTmp = function(src, dst, _cb) {
-   const cb = (err) => {
-    if (err) {
-      fs.unlink(src, function() {});
-    }
-    _cb(err);
-  };
+const renameTmpNix = function(src, dst, cb) {
+  fs.rename(src, dst, cb);
+}
 
-  if (process.platform !== 'win32') {
-    return fs.rename(src, dst, cb);
-  }
-
+const renameTmpWindows = function(src, dst, cb) {
   // windows can't remove opened file,
   // but it seem to be able to rename it
   const tmp = tempFile(dst);
@@ -59,6 +52,20 @@ const renameTmp = function(src, dst, _cb) {
       fs.unlink(tmp, () => {});
     }
   });
+}
+
+const renameTmp = function(src, dst, _cb) {
+   const cb = (err) => {
+    if (err) {
+      fs.unlink(src, function() {});
+    }
+    _cb(err);
+  };
+
+  if (process.platform !== 'win32') {
+    return renameTmpNix(src, dst, cb);
+  }
+  renameTmpWindows(src, dst, cb);
 };
 
 class LocalFS implements ILocalPackageManager {
