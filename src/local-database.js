@@ -5,31 +5,42 @@ import _ from 'lodash';
 import Path from 'path';
 import LocalFS from './local-fs';
 import mkdirp from 'mkdirp';
+import EventEmitter from 'events';
 import type {StorageList, LocalStorage, Logger, Config} from '@verdaccio/types';
 import type {IPackageStorage, ILocalData} from '@verdaccio/local-storage';
 
 /**
  * Handle local database.
  */
- class LocalDatabase implements ILocalData {
+ class LocalDatabase extends EventEmitter implements ILocalData {
 
   path: string;
   logger: Logger;
   data: LocalStorage;
   config: Config;
   locked: boolean;
+  watch: boolean;
 
   /**
    * Load an parse the local json database.
    * @param {*} path the database path
    */
    constructor(config: Config, logger: Logger) {
+    super();
     this.config = config;
     this.path = this._buildStoragePath(config);
     this.logger = logger;
     this.locked = false;
     this.data = this._fetchLocalPackages();
     this.data.secret = this.config.checkSecretKey(this.data.secret);
+    this.watch = true;
+    fs.watchFile(this.path, (curr, prev) => {
+      if (this.watch) {
+        this.data = this._fetchLocalPackages();
+        this.data.secret = this.config.checkSecretKey(this.data.secret);
+        this.emit('data', this.data);
+      }
+    });
     this.sync();
   }
 
@@ -76,6 +87,8 @@ import type {IPackageStorage, ILocalData} from '@verdaccio/local-storage';
       this.logger.error('Database is locked, please check error message printed during startup to prevent data loss.');
       return new Error('Verdaccio database is locked, please contact your administrator to checkout logs during verdaccio startup.');
     }
+    // don't get self-notified.
+    this.watch = false;
     // Uses sync to prevent ugly race condition
     try {
       mkdirp.sync(Path.dirname(this.path));
@@ -89,6 +102,7 @@ import type {IPackageStorage, ILocalData} from '@verdaccio/local-storage';
     } catch (err) {
       return err;
     }
+    this.watch = true;
   }
 
   getPackageStorage(packageInfo: string): IPackageStorage {
