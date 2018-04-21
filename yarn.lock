@@ -212,8 +212,9 @@
   version "1.0.0"
   resolved "https://registry.npmjs.org/@verdaccio/streams/-/streams-1.0.0.tgz#d5d24c6747208728b9fd16b908e3932c3fb1f864"
 
-"@verdaccio/types@../flow-types":
-  version "2.1.0"
+"@verdaccio/types@2.2.1":
+  version "2.2.1"
+  resolved "https://registry.npmjs.org/@verdaccio/types/-/types-2.2.1.tgz#332306e6a129bfd32a364ebe285921edf70a238b"
 
 JSONStream@^1.0.4:
   version "1.3.2"

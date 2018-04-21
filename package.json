@@ -1,6 +1,6 @@
 {
   "name": "@verdaccio/local-storage",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "local storage implementation",
   "main": "lib/index.js",
   "scripts": {
@@ -26,7 +26,7 @@
   "devDependencies": {
     "@commitlint/cli": "6.1.3",
     "@commitlint/config-conventional": "6.1.3",
-    "@verdaccio/types": "../flow-types",
+    "@verdaccio/types": "2.2.1",
     "babel-cli": "6.26.0",
     "babel-core": "6.26.0",
     "babel-eslint": "8.2.2",

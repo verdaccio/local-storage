@@ -75,13 +75,15 @@ class LocalDatabase extends EventEmitter implements ILocalData {
     }
   }
 
-  getSecret() {
-    return this.data.secret;
+  getSecret(): Promise<any> {
+    return Promise.resolve(this.data.secret);
   }
 
-  setSecret(secret: string) {
-    this.data.secret = secret;
-    this._sync();
+  setSecret(secret: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.data.secret = secret;
+      resolve(this._sync());
+    });
   }
 
   /**
