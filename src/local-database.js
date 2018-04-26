@@ -1,45 +1,38 @@
 // @flow
 
-import fs from 'fs';
 import _ from 'lodash';
 import Path from 'path';
 import LocalFS from './local-fs';
-import mkdirp from 'mkdirp';
 import type { StorageList, LocalStorage, Logger, Config, Callback } from '@verdaccio/types';
 import type { IPackageStorage, ILocalData } from '@verdaccio/local-storage';
+import { S3 } from 'aws-sdk';
 
 /**
  * Handle local database.
  */
 class LocalDatabase implements ILocalData {
-  path: string;
   logger: Logger;
-  data: LocalStorage;
   config: Config;
-  locked: boolean;
+  bucket: string;
+  _localData: ?LocalStorage;
 
-  /**
-   * Load an parse the local json database.
-   * @param {*} path the database path
-   */
   constructor(config: Config, logger: Logger) {
     this.config = config;
-    this.path = this._buildStoragePath(config);
     this.logger = logger;
-    this.locked = false;
-    this.data = this._fetchLocalPackages();
-    this._sync();
+    this.bucket = config.store['s3-storage'].bucket;
+    this.s3 = new S3();
+    if (!this.bucket) {
+      throw new Error('s3 storage requires a bucket');
+    }
   }
 
-  getSecret(): Promise<any> {
-    return Promise.resolve(this.data.secret);
+  async getSecret(): Promise<any> {
+    return Promise.resolve((await this._getData()).secret);
   }
 
-  setSecret(secret: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.data.secret = secret;
-      resolve(this._sync());
-    });
+  async setSecret(secret: string): Promise<any> {
+    (await this._getData()).secret = secret;
+    await this._sync();
   }
 
   /**
@@ -48,12 +41,19 @@ class LocalDatabase implements ILocalData {
    * @return {Error|*}
    */
   add(name: string, cb: Callback) {
-    if (this.data.list.indexOf(name) === -1) {
-      this.data.list.push(name);
-      cb(this._sync());
-    } else {
-      cb(null);
-    }
+    this._getData().then(async data => {
+      if (data.list.indexOf(name) === -1) {
+        data.list.push(name);
+        try {
+          this._sync();
+          cb();
+        } catch (err) {
+          cb(err);
+        }
+      } else {
+        cb();
+      }
+    });
   }
 
   /**
@@ -62,17 +62,23 @@ class LocalDatabase implements ILocalData {
    * @return {Error|*}
    */
   remove(name: string, cb: Callback) {
-    this.get((err, data) => {
+    this.get(async (err, data) => {
       if (err) {
         cb(new Error('error on get'));
       }
 
       const pkgName = data.indexOf(name);
       if (pkgName !== -1) {
-        this.data.list.splice(pkgName, 1);
+        const data = await this._getData();
+        data.list.splice(pkgName, 1);
       }
 
-      cb(this._sync());
+      try {
+        this._sync();
+        cb();
+      } catch (err) {
+        cb(err);
+      }
     });
   }
 
@@ -81,46 +87,42 @@ class LocalDatabase implements ILocalData {
    * @return {Array}
    */
   get(cb: Callback) {
-    cb(null, this.data.list);
+    this._getData().then(data => cb(null, data.list));
   }
 
   /**
    * Syncronize {create} database whether does not exist.
    * @return {Error|*}
    */
-  _sync() {
-    if (this.locked) {
-      this.logger.error('Database is locked, please check error message printed during startup to prevent data loss.');
-      return new Error('Verdaccio database is locked, please contact your administrator to checkout logs during verdaccio startup.');
-    }
-    // Uses sync to prevent ugly race condition
-    try {
-      mkdirp.sync(Path.dirname(this.path));
-    } catch (err) {
-      // perhaps a logger instance?
-      return null;
-    }
-
-    try {
-      fs.writeFileSync(this.path, JSON.stringify(this.data));
-      return null;
-    } catch (err) {
-      return err;
-    }
+  async _sync() {
+    await new Promise((resolve, reject) => {
+      this.s3.putObject(
+        {
+          Bucket: this.bucket,
+          Key: 'verdaccio-s3-db.json',
+          Body: JSON.stringify(this._localData)
+        },
+        (err, data) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve();
+        }
+      );
+    });
   }
 
-  getPackageStorage(packageInfo: string): IPackageStorage {
+  getPackageStorage(packageName: string): IPackageStorage {
     // $FlowFixMe
-    const packagePath: string = this._getLocalStoragePath(this.config.getMatchedPackagesSpec(packageInfo).storage);
+    const packagePath: string = this._getLocalStoragePath(this.config.getMatchedPackagesSpec(packageName).storage);
 
     if (_.isString(packagePath) === false) {
-      this.logger.debug({ name: packageInfo }, 'this package has no storage defined: @{name}');
+      this.logger.debug({ name: packageName }, 'this package has no storage defined: @{name}');
       return;
     }
 
-    const packageStoragePath: string = Path.join(Path.resolve(Path.dirname(this.config.self_path || ''), packagePath), packageInfo);
-
-    return new LocalFS(packageStoragePath, this.logger);
+    return new LocalFS(this.bucket, packageName, this.logger);
   }
 
   /**
@@ -144,57 +146,27 @@ class LocalDatabase implements ILocalData {
    * @private
    */
   _buildStoragePath(config: Config) {
-    return Path.join(Path.resolve(Path.dirname(config.self_path || ''), config.storage, '.sinopia-db.json'));
+    return Path.join(Path.resolve(Path.dirname(config.self_path || ''), config.storage, '.verdaccio-s3-db.json'));
   }
 
-  /**
-   * Fetch local packages.
-   * @private
-   * @return {Object}
-   */
-  _fetchLocalPackages(): LocalStorage {
-    const database: StorageList = [];
-    const emptyDatabase = { list: database, secret: '' };
-
-    try {
-      const dbFile = fs.readFileSync(this.path, 'utf8');
-
-      if (_.isNil(dbFile)) {
-        // readFileSync is platform specific, FreeBSD might return null
-        return emptyDatabase;
-      }
-
-      const db = this._parseDatabase(dbFile);
-
-      if (!db) {
-        return emptyDatabase;
-      }
-
-      return db;
-    } catch (err) {
-      // readFileSync is platform specific, macOS, Linux and Windows thrown an error
-      // Only recreate if file not found to prevent data loss
-      if (err.code !== 'ENOENT') {
-        this.locked = true;
-        this.logger.error('Failed to read package database file, please check the error printed below:\n', `File Path: ${this.path}\n\n ${err.message}`);
-      }
-      return emptyDatabase;
+  async _getData(): Promise<LocalStorage> {
+    if (!this._localData) {
+      this._localData = await new Promise((resolve, reject) => {
+        this.s3.getObject({ Bucket: this.bucket, Key: 'verdaccio-s3-db.json' }, (err, response) => {
+          if (err) {
+            if (err.code === 'NoSuchKey') {
+              resolve({ list: [], secret: '' });
+            } else {
+              reject(err);
+            }
+            return;
+          }
+          const data = JSON.parse(response.Body.toString());
+          resolve(data);
+        });
+      });
     }
-  }
-
-  /**
-   * Parse the local database.
-   * @param {Object} dbFile
-   * @private
-   * @return {Object}
-   */
-  _parseDatabase(dbFile: any) {
-    try {
-      return JSON.parse(dbFile);
-    } catch (err) {
-      this.logger.error(`Package database file corrupted (invalid JSON), please check the error printed below.\nFile Path: ${this.path}`, err);
-      this.locked = true;
-    }
+    return this._localData;
   }
 }
 
