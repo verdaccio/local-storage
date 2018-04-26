@@ -1,339 +1,249 @@
 // @flow
 
-import fs from 'fs';
-import path from 'path';
+import stream from 'stream';
 
-import _ from 'lodash';
-import mkdirp from 'mkdirp';
-import createError from 'http-errors';
-import type { HttpError } from 'http-errors';
+import { S3 } from 'aws-sdk';
 import { UploadTarball, ReadTarball } from '@verdaccio/streams';
-import { unlockFile, readFile } from '@verdaccio/file-locking';
 import type { IUploadTarball } from '@verdaccio/streams';
 import type { Callback, Logger, Package } from '@verdaccio/types';
 import type { ILocalPackageManager } from '@verdaccio/local-storage';
+import { error503, error409, error404, convertS3GetError } from './s3errors';
 
-export const fileExist: string = 'EEXISTS';
-export const noSuchFile: string = 'ENOENT';
-
-const resourceNotAvailable: string = 'EAGAIN';
 const pkgFileName = 'package.json';
-const fSError = function(message: string, code: number = 409): HttpError {
-  const err: HttpError = createError(code, message);
-  // $FlowFixMe
-  err.code = message;
 
-  return err;
-};
+// This is initialized for a single package
 
-const ErrorCode = {
-  get503: () => {
-    return fSError('resource temporarily unavailable', 500);
-  },
-  get404: customMessage => {
-    return fSError('no such package available', 404);
-  }
-};
-
-const tempFile = function(str) {
-  return `${str}.tmp${String(Math.random()).substr(2)}`;
-};
-
-const renameTmp = function(src, dst, _cb) {
-  const cb = err => {
-    if (err) {
-      fs.unlink(src, function() {});
-    }
-    _cb(err);
-  };
-
-  if (process.platform !== 'win32') {
-    return fs.rename(src, dst, cb);
-  }
-
-  // windows can't remove opened file,
-  // but it seem to be able to rename it
-  const tmp = tempFile(dst);
-  fs.rename(dst, tmp, function(err) {
-    fs.rename(src, dst, cb);
-    if (!err) {
-      fs.unlink(tmp, () => {});
-    }
-  });
-};
-
-class LocalFS implements ILocalPackageManager {
-  path: string;
+export default class LocalFS implements ILocalPackageManager {
+  bucket: string;
+  packageName: string;
   logger: Logger;
+  s3: any;
+  _localData: any;
 
-  constructor(path: string, logger: Logger) {
-    this.path = path;
+  constructor(bucket: string, packageName: string, logger: Logger) {
+    this.bucket = bucket;
+    this.packageName = packageName;
     this.logger = logger;
+    this.s3 = new S3();
   }
 
   /**
-    *  This function allows to update the package thread-safely
-      Algorithm:
-      1. lock package.json for writing
-      2. read package.json
-      3. updateFn(pkg, cb), and wait for cb
-      4. write package.json.tmp
-      5. move package.json.tmp package.json
-      6. callback(err?)
-    * @param {*} name
-    * @param {*} updateHandler
-    * @param {*} onWrite
-    * @param {*} transformPackage
-    * @param {*} onEnd
-    */
+  2. read package.json
+  3. updateFn(pkg, cb), and wait for cb
+  4. write package.json.tmp
+  5. move package.json.tmp package.json
+  6. callback(err?)
+  * @param {*} name
+  * @param {*} updateHandler
+  * @param {*} onWrite
+  * @param {*} transformPackage
+  * @param {*} onEnd
+  */
   updatePackage(name: string, updateHandler: Callback, onWrite: Callback, transformPackage: Function, onEnd: Callback) {
-    this._lockAndReadJSON(pkgFileName, (err, json) => {
-      let locked = false;
-      const self = this;
-      // callback that cleans up lock first
-      const unLockCallback = function(lockError: Error) {
-        let _args = arguments;
-        if (locked) {
-          self._unlockJSON(pkgFileName, function() {
-            // ignore any error from the unlock
-            onEnd.apply(lockError, _args);
-          });
-        } else {
-          onEnd(..._args);
-        }
-      };
-
-      if (!err) {
-        locked = true;
+    (async () => {
+      try {
+        const json = await this._getData();
+        updateHandler(json, err => {
+          if (err) {
+            onEnd(err);
+          } else {
+            onWrite(name, transformPackage(json), onEnd);
+          }
+        });
+      } catch (err) {
+        debugger;
+        return onEnd(err);
       }
+    })();
+  }
 
-      if (_.isNil(err) === false) {
-        if (err.code === resourceNotAvailable) {
-          return unLockCallback(ErrorCode.get503());
-        } else if (err.code === noSuchFile) {
-          return unLockCallback(ErrorCode.get404());
-        } else {
-          return unLockCallback(err);
-        }
-      }
-
-      updateHandler(json, err => {
-        if (err) {
-          return unLockCallback(err);
-        }
-        onWrite(name, transformPackage(json), unLockCallback);
+  async _getData(): Promise<any> {
+    if (!this._localData) {
+      return await new Promise((resolve, reject) => {
+        this.s3.getObject(
+          {
+            Bucket: this.bucket,
+            Key: `${this.packageName}/${pkgFileName}`
+          },
+          (err, response) => {
+            if (err) {
+              reject(convertS3GetError(err));
+              return;
+            }
+            const data = JSON.parse(response.Body.toString());
+            resolve(data);
+          }
+        );
       });
-    });
+    }
+    return this._localData;
   }
 
   deletePackage(fileName: string, callback: Callback) {
-    return fs.unlink(this._getStorage(fileName), callback);
+    this.s3.deleteObject(
+      {
+        Bucket: this.bucket,
+        Key: `${this.packageName}/${fileName}`
+      },
+      (err, data) => {
+        if (err) {
+          debugger;
+          throw err;
+        }
+        callback();
+      }
+    );
   }
 
   removePackage(callback: Callback): void {
-    fs.rmdir(this._getStorage('.'), callback);
+    this.s3.listObjectsV2(
+      {
+        Bucket: this.bucket,
+        Prefix: this.packageName
+      },
+      (err, data) => {
+        if (err) {
+          debugger;
+          throw err;
+        }
+        debugger;
+        this.s3.deleteObjects(
+          {
+            Bucket: this.bucket,
+            Delete: []
+          },
+          (err, data) => {
+            if (err) {
+              debugger;
+              throw err;
+            }
+            callback();
+          }
+        );
+      }
+    );
   }
 
   createPackage(name: string, value: Package, cb: Function) {
-    this._createFile(this._getStorage(pkgFileName), this._convertToString(value), cb);
+    this.savePackage(name, value, cb);
   }
 
   savePackage(name: string, value: Package, cb: Function) {
-    this._writeFile(this._getStorage(pkgFileName), this._convertToString(value), cb);
+    this.s3.putObject(
+      {
+        Body: JSON.stringify(value, null, '  '),
+        Bucket: this.bucket,
+        Key: `${this.packageName}/${pkgFileName}`
+      },
+      cb
+    );
   }
 
   readPackage(name: string, cb: Function) {
-    this._readStorageFile(this._getStorage(pkgFileName)).then(
-      function(res) {
-        try {
-          const data: any = JSON.parse(res.toString('utf8'));
-
-          cb(null, data);
-        } catch (err) {
-          cb(err);
-        }
-      },
-      function(err) {
-        return cb(err);
+    (async () => {
+      try {
+        const data = await this._getData();
+        cb(null, data);
+      } catch (err) {
+        cb(err);
       }
-    );
+    })();
   }
 
   writeTarball(name: string): IUploadTarball {
     const uploadStream = new UploadTarball();
 
-    let _ended = 0;
-    uploadStream.on('end', function() {
-      _ended = 1;
+    let streamEnded = 0;
+    uploadStream.on('end', () => {
+      streamEnded = 1;
     });
 
-    const pathName: string = this._getStorage(name);
+    const baseS3Params = {
+      Bucket: this.bucket,
+      Key: `${this.packageName}/${name}`
+    };
 
-    fs.exists(pathName, exists => {
-      if (exists) {
-        uploadStream.emit('error', fSError(fileExist));
-      }
-
-      const temporalName = path.join(this.path, `${name}.tmp-${String(Math.random()).replace(/^0\./, '')}`);
-      const file = fs.createWriteStream(temporalName);
-      const removeTempFile = () => fs.unlink(temporalName, function() {});
-      let opened = false;
-      uploadStream.pipe(file);
-
-      uploadStream.done = function() {
-        const onend = function() {
-          file.on('close', function() {
-            renameTmp(temporalName, pathName, function(err) {
+    this.s3.getObject(baseS3Params, (err, response) => {
+      if (err) {
+        err = convertS3GetError(err);
+        if (err !== error404) {
+          throw err;
+        } else {
+          const s3upload = new Promise((resolve, reject) => {
+            this.s3.upload(Object.assign({}, baseS3Params, { Body: uploadStream }), (err, data) => {
               if (err) {
-                uploadStream.emit('error', err);
+                reject(err);
               } else {
-                uploadStream.emit('success');
+                resolve();
               }
             });
           });
-          file.end();
-        };
-        if (_ended) {
-          onend();
-        } else {
-          uploadStream.on('end', onend);
+
+          uploadStream.done = () => {
+            const onEnd = async () => {
+              try {
+                await s3upload;
+                uploadStream.emit('success');
+              } catch (err) {
+                debugger;
+                uploadStream.emit('error', err);
+              }
+            };
+            if (streamEnded) {
+              onEnd();
+            } else {
+              uploadStream.on('end', onEnd);
+            }
+          };
+
+          uploadStream.abort = async () => {
+            debugger;
+            try {
+              await s3upload;
+            } finally {
+              this.s3.deleteObject(baseS3Params);
+            }
+          };
         }
-      };
-
-      uploadStream.abort = function() {
-        if (opened) {
-          opened = false;
-          file.on('close', function() {
-            removeTempFile();
-          });
-        } else {
-          // if the file does not recieve any byte never is opened and has to be removed anyway.
-          removeTempFile();
-        }
-        file.end();
-      };
-
-      file.on('open', function() {
-        opened = true;
-        // re-emitting open because it's handled in storage.js
-        uploadStream.emit('open');
-      });
-
-      file.on('error', function(err) {
-        uploadStream.emit('error', err);
-      });
+      } else {
+        uploadStream.emit('error', error409);
+      }
     });
 
     return uploadStream;
   }
 
-  readTarball(name: string, readTarballStream: any, callback: Function = () => {}) {
-    const pathName: string = this._getStorage(name);
-
-    const readStream = fs.createReadStream(pathName);
-
-    readStream.on('error', function(err) {
-      readTarballStream.emit('error', err);
-    });
-
-    readStream.on('open', function(fd) {
-      fs.fstat(fd, function(err, stats) {
-        if (_.isNil(err) === false) {
-          return readTarballStream.emit('error', err);
-        }
-        readTarballStream.emit('content-length', stats.size);
-        readTarballStream.emit('open');
-        readStream.pipe(readTarballStream);
-      });
-    });
-
+  readTarball(name: string, readTarballStream: any) {
     readTarballStream = new ReadTarball();
 
-    readTarballStream.abort = function() {
-      readStream.close();
+    let aborted = false;
+
+    readTarballStream.abort = () => {
+      aborted = true;
     };
+
+    this.s3.getObject(
+      {
+        Bucket: this.bucket,
+        Key: `${this.packageName}/${name}`
+      },
+      (err, data) => {
+        if (!aborted) {
+          if (err) {
+            readTarballStream.emit('error', convertS3GetError(err));
+          } else {
+            const bufferStream = new stream.PassThrough();
+            // NOTE: no chunking is done here
+            bufferStream.end(data.Body);
+
+            readTarballStream.emit('content-length', data.ContentLength);
+            readTarballStream.emit('open');
+            bufferStream.pipe(readTarballStream);
+          }
+        }
+      }
+    );
 
     return readTarballStream;
   }
-
-  _createFile(name: string, contents: any, callback: Function) {
-    fs.exists(name, exists => {
-      if (exists) {
-        return callback(fSError(fileExist));
-      }
-      this._writeFile(name, contents, callback);
-    });
-  }
-
-  _readStorageFile(name: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      fs.readFile(name, (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(data);
-        }
-      });
-    });
-  }
-
-  _convertToString(value: Package): string {
-    return JSON.stringify(value, null, '\t');
-  }
-
-  _getStorage(name: string = '') {
-    const storagePath: string = path.join(this.path, name);
-
-    return storagePath;
-  }
-
-  _writeFile(dest: string, data: string, cb: Function) {
-    const createTempFile = cb => {
-      const tempFilePath = tempFile(dest);
-
-      fs.writeFile(tempFilePath, data, err => {
-        if (err) {
-          return cb(err);
-        }
-        renameTmp(tempFilePath, dest, cb);
-      });
-    };
-
-    createTempFile(err => {
-      if (err && err.code === noSuchFile) {
-        mkdirp(path.dirname(dest), function(err) {
-          if (err) {
-            return cb(err);
-          }
-          createTempFile(cb);
-        });
-      } else {
-        cb(err);
-      }
-    });
-  }
-
-  _lockAndReadJSON(name: string, cb: Function) {
-    const fileName: string = this._getStorage(name);
-
-    readFile(
-      fileName,
-      {
-        lock: true,
-        parse: true
-      },
-      function(err, res) {
-        if (err) {
-          return cb(err);
-        }
-        return cb(null, res);
-      }
-    );
-  }
-
-  _unlockJSON(name: string, cb: Function) {
-    unlockFile(this._getStorage(name), cb);
-  }
 }
-
-export default LocalFS;
