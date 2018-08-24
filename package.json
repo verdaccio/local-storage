@@ -39,7 +39,7 @@
     "eslint-config-google": "0.9.1",
     "eslint-config-prettier": "2.9.0",
     "eslint-plugin-flowtype": "2.50.0",
-    "eslint-plugin-jest": "21.17.0",
+    "eslint-plugin-jest": "21.22.0",
     "eslint-plugin-prettier": "2.6.2",
     "flow-bin": "0.76.0",
     "flow-runtime": "0.17.0",
