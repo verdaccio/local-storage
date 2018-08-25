@@ -246,7 +246,12 @@ class LocalDatabase implements IPluginStorage {
    * @private
    */
   _buildStoragePath(config: Config) {
-    return Path.join(Path.resolve(Path.dirname(config.self_path || ''), (config: any).storage, '.sinopia-db.json'));
+    const sinopiadbPath = Path.join(Path.resolve(Path.dirname(config.self_path || ''), (config: any).storage, '.sinopia-db.json'));
+    if (fs.existsSync(sinopiadbPath)) {
+      return sinopiadbPath;
+    }
+
+    return Path.join(Path.resolve(Path.dirname(config.self_path || ''), (config: any).storage, '.verdaccio-db.json'));
   }
 
   /**
