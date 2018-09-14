@@ -39,18 +39,32 @@ const tempFile = function(str) {
   return `${str}.tmp${String(Math.random()).substr(2)}`;
 };
 
-const renameTmp = function(src, dst, _cb) {
-  const cb = err => {
+const renameTmpNix = function(src, dst, cb) {
+  fs.rename(src, dst, (err) => {
     if (err) {
-      fs.unlink(src, function() {});
+      if (err.code === 'EXDEV') {
+        // Cannot rename across devices.
+        copyAndUnlink();
+      } else {
+        cb(err);
+      }
+      return;
     }
-    _cb(err);
-  };
+    cb(null);
+  });
 
-  if (process.platform !== 'win32') {
-    return fs.rename(src, dst, cb);
+  function copyAndUnlink() {
+    var readStream = fs.createReadStream(src);
+    var writeStream = fs.createWriteStream(dst);
+
+    readStream.on('error', cb);
+    writeStream.on('error', cb);
+    readStream.on('close', () => fs.unlink(src, () => {}));
+    readStream.pipe(writeStream);
   }
+}
 
+const renameTmpWindows = function(src, dst, cb) {
   // windows can't remove opened file,
   // but it seem to be able to rename it
   const tmp = tempFile(dst);
@@ -60,6 +74,20 @@ const renameTmp = function(src, dst, _cb) {
       fs.unlink(tmp, () => {});
     }
   });
+}
+
+const renameTmp = function(src, dst, _cb) {
+   const cb = (err) => {
+    if (err) {
+      fs.unlink(src, function() {});
+    }
+    _cb(err);
+  };
+
+  if (process.platform !== 'win32') {
+    return renameTmpNix(src, dst, cb);
+  }
+  renameTmpWindows(src, dst, cb);
 };
 
 class LocalFS implements ILocalPackageManager {
