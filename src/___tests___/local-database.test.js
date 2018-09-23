@@ -49,7 +49,7 @@ describe('Local Database', () => {
   });
 
   describe('getPackageStorage', () => {
-    test('should get default storage', async () => {
+    test('should get default storage', () => {
       const pkgName: string = 'someRandomePackage';
       const locaDatabase = new LocalDatabase(clone(stuff.config), stuff.logger);
       const storage = locaDatabase.getPackageStorage(pkgName);
@@ -60,7 +60,7 @@ describe('Local Database', () => {
       }
     });
 
-    test('should use custom storage', async () => {
+    test('should use custom storage', () => {
       const pkgName: string = 'local-private-custom-storage';
       const locaDatabase = new LocalDatabase(clone(stuff.config), stuff.logger);
       const storage = locaDatabase.getPackageStorage(pkgName);
