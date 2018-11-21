@@ -43,7 +43,7 @@
     "eslint-plugin-prettier": "2.6.2",
     "flow-bin": "0.81.0",
     "flow-runtime": "0.17.0",
-    "husky": "0.14.3",
+    "husky": "1.2.0",
     "jest": "23.6.0",
     "minimatch": "^3.0.4",
     "prettier": "1.14.3",
