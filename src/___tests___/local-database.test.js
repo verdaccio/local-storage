@@ -22,12 +22,31 @@ describe('Local Database', () => {
     locaDatabase = new LocalDatabase(stuff.config, stuff.logger);
     // clean database
     locaDatabase._sync();
+    jest.clearAllMocks();
+    jest.resetModules();
   });
 
   test('should create an instance', () => {
     const locaDatabase = new LocalDatabase(stuff.config, stuff.logger);
 
+    expect(stuff.logger.error).not.toHaveBeenCalled();
     expect(locaDatabase).toBeDefined();
+  });
+
+  test('should display log error if fails on load database', () => {
+    jest.doMock('../utils.js', () => {
+      return {
+        loadPrivatePackages: () => {
+          throw Error();
+        }
+      };
+    });
+
+    const LocalDatabase = require('../local-database').default;
+    new LocalDatabase(stuff.config, stuff.logger);
+
+    expect(stuff.logger.error).toHaveBeenCalled();
+    expect(stuff.logger.error).toHaveBeenCalledTimes(2);
   });
 
   describe('should create set secret', () => {

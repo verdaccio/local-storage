@@ -3,14 +3,15 @@
 import fs from 'fs';
 import _ from 'lodash';
 import Path from 'path';
-import LocalFS from './local-fs';
 // $FlowFixMe
 import async from 'async';
 import mkdirp from 'mkdirp';
+
+import LocalFS from './local-fs';
+import { loadPrivatePackages } from './utils';
+
 import type { StorageList, LocalStorage, Logger, Config, Callback } from '@verdaccio/types';
 import type { IPackageStorage, IPluginStorage } from '@verdaccio/local-storage';
-
-import { loadPrivatePackages } from './utils';
 
 const DEPRECATED_DB_NAME: string = '.sinopia-db.json';
 const DB_NAME: string = '.verdaccio-db.json';
