@@ -92,7 +92,8 @@ class LocalFS implements ILocalPackageManager {
       const self = this;
       // callback that cleans up lock first
       const unLockCallback = function(lockError: Error) {
-        let _args = arguments;
+        const _args = arguments;
+
         if (locked) {
           self._unlockJSON(pkgFileName, function() {
             // ignore any error from the unlock

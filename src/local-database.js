@@ -10,6 +10,11 @@ import mkdirp from 'mkdirp';
 import type { StorageList, LocalStorage, Logger, Config, Callback } from '@verdaccio/types';
 import type { IPackageStorage, IPluginStorage } from '@verdaccio/local-storage';
 
+import { loadPrivatePackages } from './utils';
+
+const DEPRECATED_DB_NAME: string = '.sinopia-db.json';
+const DB_NAME: string = '.verdaccio-db.json';
+
 /**
  * Handle local database.
  */
@@ -252,12 +257,12 @@ class LocalDatabase implements IPluginStorage {
       return Path.join(Path.resolve(Path.dirname(config.self_path || ''), (config: any).storage, dbName));
     };
 
-    const sinopiadbPath = dbGenPath('.sinopia-db.json');
+    const sinopiadbPath: string = dbGenPath(DEPRECATED_DB_NAME);
     if (fs.existsSync(sinopiadbPath)) {
       return sinopiadbPath;
     }
 
-    return dbGenPath('.verdaccio-db.json');
+    return dbGenPath(DB_NAME);
   }
 
   /**
@@ -266,22 +271,11 @@ class LocalDatabase implements IPluginStorage {
    * @return {Object}
    */
   _fetchLocalPackages(): LocalStorage {
-    const database: StorageList = [];
-    const emptyDatabase = { list: database, secret: '' };
+    const list: StorageList = [];
+    const emptyDatabase = { list, secret: '' };
 
     try {
-      const dbFile = fs.readFileSync(this.path, 'utf8');
-
-      if (_.isNil(dbFile)) {
-        // readFileSync is platform specific, FreeBSD might return null
-        return emptyDatabase;
-      }
-
-      const db = this._parseDatabase(dbFile);
-
-      if (!db) {
-        return emptyDatabase;
-      }
+      const db = loadPrivatePackages(this.path, this.logger);
 
       return db;
     } catch (err) {
@@ -291,22 +285,8 @@ class LocalDatabase implements IPluginStorage {
         this.locked = true;
         this.logger.error('Failed to read package database file, please check the error printed below:\n', `File Path: ${this.path}\n\n ${err.message}`);
       }
-      return emptyDatabase;
-    }
-  }
 
-  /**
-   * Parse the local database.
-   * @param {Object} dbFile
-   * @private
-   * @return {Object}
-   */
-  _parseDatabase(dbFile: any) {
-    try {
-      return JSON.parse(dbFile);
-    } catch (err) {
-      this.logger.error(`Package database file corrupted (invalid JSON), please check the error printed below.\nFile Path: ${this.path}`, err);
-      this.locked = true;
+      return emptyDatabase;
     }
   }
 }

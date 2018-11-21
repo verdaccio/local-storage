@@ -34,6 +34,7 @@ describe('Local Database', () => {
     test('should create get secret', async () => {
       const locaDatabase = new LocalDatabase(clone(stuff.config), stuff.logger);
       const secretKey = await locaDatabase.getSecret();
+
       expect(secretKey).toBeDefined();
       expect(typeof secretKey === 'string').toBeTruthy();
     });
@@ -42,8 +43,10 @@ describe('Local Database', () => {
       const locaDatabase = new LocalDatabase(clone(stuff.config), stuff.logger);
 
       await locaDatabase.setSecret(stuff.config.checkSecretKey());
+
       expect(stuff.config.secret).toBeDefined();
       expect(typeof stuff.config.secret === 'string').toBeTruthy();
+
       const fetchedSecretKey = await locaDatabase.getSecret();
       expect(stuff.config.secret).toBe(fetchedSecretKey);
     });
@@ -65,6 +68,7 @@ describe('Local Database', () => {
       const pkgName: string = 'local-private-custom-storage';
       const locaDatabase = new LocalDatabase(clone(stuff.config), stuff.logger);
       const storage = locaDatabase.getPackageStorage(pkgName);
+
       expect(storage).toBeDefined();
 
       if (storage) {
@@ -108,6 +112,12 @@ describe('Local Database', () => {
           });
         });
       });
+    });
+  });
+
+  describe('search', () => {
+    test('should remove an item to database', () => {
+      expect(1).toBe(1);
     });
   });
 });
