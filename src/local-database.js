@@ -68,10 +68,14 @@ class LocalDatabase implements IPluginStorage {
     const storages = this._getCustomPackageLocalStorages();
     const base = Path.dirname(this.config.self_path);
     const self = this;
+    const storageKeys = Object.keys(storages);
+
     async.eachSeries(
-      Object.keys(storages),
+      storageKeys,
       function(storage, cb) {
-        fs.readdir(Path.resolve(base, storage), function(err, files) {
+        const storagePath: string = Path.resolve(base, storage);
+
+        fs.readdir(storagePath, (err, files) => {
           if (err) {
             return cb(err);
           }
