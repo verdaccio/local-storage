@@ -7,8 +7,7 @@ import Path from 'path';
 import async from 'async';
 import mkdirp from 'mkdirp';
 
-import LocalFS, {noSuchFile} from './local-fs';
-import {findPackages, getFileStats } from './utils';
+import LocalFS, { noSuchFile } from './local-fs';
 import { loadPrivatePackages } from './pkg-utils';
 
 import type { StorageList, LocalStorage, Logger, Config, Callback } from '@verdaccio/types';
@@ -16,10 +15,6 @@ import type { IPackageStorage, IPluginStorage } from '@verdaccio/local-storage';
 
 const DEPRECATED_DB_NAME: string = '.sinopia-db.json';
 const DB_NAME: string = '.verdaccio-db.json';
-
-function hasScope(file: string) {
-  return file.match(/^@/);
-}
 
 /**
  * Handle local database.
