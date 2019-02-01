@@ -30,7 +30,7 @@
     "babel-core": "6.26.3",
     "babel-eslint": "10.0.1",
     "babel-jest": "23.6.0",
-    "babel-plugin-flow-runtime": "0.17.0",
+    "babel-plugin-flow-runtime": "0.18.0",
     "babel-preset-env": "1.7.0",
     "babel-preset-flow": "6.23.0",
     "codecov": "3.1.0",
