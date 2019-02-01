@@ -33,7 +33,7 @@
     "@types/lodash": "^4.14.120",
     "@types/minimatch": "^3.0.3",
     "@types/node": "10.12.18",
-    "@typescript-eslint/eslint-plugin": "1.1.0",
+    "@typescript-eslint/eslint-plugin": "1.2.0",
     "@verdaccio/babel-preset": "0.0.3",
     "@verdaccio/types": "5.0.0-beta.1",
     "codecov": "3.1.0",
