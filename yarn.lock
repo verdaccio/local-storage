@@ -1110,10 +1110,10 @@
     lodash.unescape "4.0.1"
     semver "5.5.0"
 
-"@verdaccio/babel-preset@0.0.3":
-  version "0.0.3"
-  resolved "https://registry.verdaccio.org/@verdaccio%2fbabel-preset/-/babel-preset-0.0.3.tgz#8ae91e8812dc2988b9c776eb015cd600fc4f534d"
-  integrity sha512-kL6pubq/VEIJNWBNIu62vsGrgC0d7EHUVbtGMxbb5k9pER1iUdCqAnhUW54BVQL3ZDkI3rS7Yd5kabPseBDUKQ==
+"@verdaccio/babel-preset@0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@verdaccio/babel-preset/-/babel-preset-0.0.4.tgz#ad99e8404c3522d90190efc34308505cf19180ea"
+  integrity sha512-5iND5/uCFL2/HJ0AgS2z6d1DC4U+Czn1I5G3MUqR4hy3q+vNNl3Tm+18dxVukn6OI5obFoeSIQCZ/d6OCsAnpw==
   dependencies:
     "@babel/cli" "7.2.3"
     "@babel/core" "7.2.2"
@@ -2621,13 +2621,6 @@ eslint-config-prettier@3.3.0:
   dependencies:
     get-stdin "^6.0.0"
 
-eslint-plugin-flowtype@3.2.0:
-  version "3.2.0"
-  resolved "https://registry.verdaccio.org/eslint-plugin-flowtype/-/eslint-plugin-flowtype-3.2.0.tgz#824364ed5940a404b91326fdb5a313a2a74760df"
-  integrity sha512-baJmzngM6UKbEkJ5OY3aGw2zjXBt5L2QKZvTsOlXX7yHKIjNRrlJx2ods8Rng6EdqPR9rVNIQNYHpTs0qfn2qA==
-  dependencies:
-    lodash "^4.17.10"
-
 eslint-plugin-jest@22.1.2:
   version "22.1.2"
   resolved "https://registry.verdaccio.org/eslint-plugin-jest/-/eslint-plugin-jest-22.1.2.tgz#1ea36cc3faedbdb788e702ca633d635ca14e91e8"
@@ -3027,20 +3020,10 @@ flat-cache@^1.2.1:
     rimraf "~2.6.2"
     write "^0.2.1"
 
-flow-bin@0.86.0:
-  version "0.86.0"
-  resolved "https://registry.verdaccio.org/flow-bin/-/flow-bin-0.86.0.tgz#153a28722b4dc13b7200c74b644dd4d9f4969a11"
-  integrity sha512-ulRvFH3ewGIYwg+qPk/OJXoe3Nhqi0RyR0wqgK0b1NzUDEC6O99zU39MBTickXvlrr6iwRO6Wm4lVGeDmnzbew==
-
 flow-config-parser@^0.3.0:
   version "0.3.0"
   resolved "https://registry.verdaccio.org/flow-config-parser/-/flow-config-parser-0.3.0.tgz#704916efba88cd2518ab4d8f933079571276138f"
   integrity sha1-cEkW77qIzSUYq02PkzB5VxJ2E48=
-
-flow-runtime@0.17.0:
-  version "0.17.0"
-  resolved "https://registry.verdaccio.org/flow-runtime/-/flow-runtime-0.17.0.tgz#ff57dd22bd7b0682c7beff20c3590f6a4a8286e3"
-  integrity sha512-x621HugMPrtU68ddiRX0TkNRif9PS6ml3oeP6oo0k+Kv2issqCmifC4ZX59XnLUh9dfmBcj4GoZJXu4oe8L28Q==
 
 for-in@^1.0.1, for-in@^1.0.2:
   version "1.0.2"
