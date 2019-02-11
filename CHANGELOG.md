@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.1.5"></a>
+## [1.1.5](https://github.com/verdaccio/local-storage/compare/v1.1.4...v1.1.5) (2019-02-11)
+
+
+### Bug Fixes
+
+* update async for lodash security issue ([92444b2](https://github.com/verdaccio/local-storage/commit/92444b2))
+
+
+
 <a name="1.1.4"></a>
 ## [1.1.4](https://github.com/verdaccio/local-storage/compare/v1.1.3...v1.1.4) (2019-02-05)
 
