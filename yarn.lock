@@ -872,13 +872,13 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
-"@commitlint/cli@7.5.0":
-  version "7.5.0"
-  resolved "https://registry.verdaccio.org/@commitlint%2fcli/-/cli-7.5.0.tgz#6967633e45239daa09f1ff080cbd66e6e9ac11bc"
-  integrity sha512-ts5b7eCF5B2qhUtgXuFFVkhlgnkSqKVyrq9Eu197bCyT1KyxCmAGTVCvPznaK8VhG3ts7rTt7byE+lyDXpuvSg==
+"@commitlint/cli@7.5.2":
+  version "7.5.2"
+  resolved "https://registry.yarnpkg.com/@commitlint/cli/-/cli-7.5.2.tgz#2475cd8f7ed3b2f9c2ab96c06bc24d61d23f8716"
+  integrity sha512-UQdW/wNb+XeANoYYLyuKEDIfWKSzdhJkPQZ8ie/IjfMNnsP+B23bkX4Ati+6U8zgz0yyngoxWl+3lfExiIL4hQ==
   dependencies:
     "@commitlint/format" "^7.5.0"
-    "@commitlint/lint" "^7.5.0"
+    "@commitlint/lint" "^7.5.2"
     "@commitlint/load" "^7.5.0"
     "@commitlint/read" "^7.5.0"
     babel-polyfill "6.26.0"
@@ -894,10 +894,10 @@
   resolved "https://registry.verdaccio.org/@commitlint%2fconfig-conventional/-/config-conventional-7.5.0.tgz#3afd4e3e34e5c2f6ec6af03e78ae924fed883ce7"
   integrity sha512-odLgBfQ5xntFAmMfAmDY2C4EWhW+cSTbvbsRS7seb55DCa3IaxxSHHC9eXrR+hN/BdUT5vqAxdX1PkR996sq9Q==
 
-"@commitlint/ensure@^7.5.0":
-  version "7.5.0"
-  resolved "https://registry.verdaccio.org/@commitlint%2fensure/-/ensure-7.5.0.tgz#57e885365ef4d6104be8005df9f8419f83d39f23"
-  integrity sha512-zgHJFlHeO2/Wge6Yr/tlWLlZ7vJaCXnUaFsN5NaHb85PiWZTiuJmntJvh0l33pfiAVq41T2FT063vjUwFI4kSA==
+"@commitlint/ensure@^7.5.2":
+  version "7.5.2"
+  resolved "https://registry.yarnpkg.com/@commitlint/ensure/-/ensure-7.5.2.tgz#57bb7dcbf1e9913e27c3b294325d0d68dd14cebf"
+  integrity sha512-ZMJKHhSJC789chKy0kWp8EWbCpLPy6vKa+fopUVx+tWL7H8AeBbibXlqAnybg+HWNcb/RD7ORROx0IsgrK4IYA==
   dependencies:
     lodash "4.17.11"
 
@@ -916,21 +916,21 @@
     babel-runtime "^6.23.0"
     chalk "^2.0.1"
 
-"@commitlint/is-ignored@^7.5.0":
-  version "7.5.0"
-  resolved "https://registry.verdaccio.org/@commitlint%2fis-ignored/-/is-ignored-7.5.0.tgz#3531e311a3548504a2ee1420ffb5e1d944a2f6e0"
-  integrity sha512-5Nd/driOV9IFwJ7e0+g7I8pqq3EOs8dP0C2wxOpwUAL8C5saf+VGMe0HN6iPGLktITP6fHPrKisOdEJ6sRg2lw==
+"@commitlint/is-ignored@^7.5.1":
+  version "7.5.1"
+  resolved "https://registry.yarnpkg.com/@commitlint/is-ignored/-/is-ignored-7.5.1.tgz#c4f7ffc1c8b4cf9dc3204d22ef8e78ff82536d67"
+  integrity sha512-8JZCgy6bWSnjOT5cTTiyEAGp+Y4+5CUknhVbyiPxTRbjy6yF0aMKs1gMTfHrNHTKsasgmkCyPQd4C2eOPceuKA==
   dependencies:
     semver "5.6.0"
 
-"@commitlint/lint@^7.5.0":
-  version "7.5.0"
-  resolved "https://registry.verdaccio.org/@commitlint%2flint/-/lint-7.5.0.tgz#6f8560b491e10ec2a5a894d5d701cd6444547072"
-  integrity sha512-sRd6V/SoJuF6Qwwd9cjz8pLd8lCh1jisnyRlubkq0spgZFR9IXE3Qj1hK29q4EPVvXHwli/z3fBZx2hrrZqqsQ==
+"@commitlint/lint@^7.5.2":
+  version "7.5.2"
+  resolved "https://registry.yarnpkg.com/@commitlint/lint/-/lint-7.5.2.tgz#26cb819c74f8770413c4f6ef1e7abf1b739eda77"
+  integrity sha512-DY/UfGFDquMno+5c6+tE50rMxpjdQK3CRG+nktgYlVz1UAqeUD+bRc3pvX5HwAsuGvyDrWAjtszHtEDeYJKcjw==
   dependencies:
-    "@commitlint/is-ignored" "^7.5.0"
+    "@commitlint/is-ignored" "^7.5.1"
     "@commitlint/parse" "^7.5.0"
-    "@commitlint/rules" "^7.5.0"
+    "@commitlint/rules" "^7.5.2"
     babel-runtime "^6.23.0"
     lodash "4.17.11"
 
@@ -981,12 +981,12 @@
     resolve-from "^4.0.0"
     resolve-global "^0.1.0"
 
-"@commitlint/rules@^7.5.0":
-  version "7.5.0"
-  resolved "https://registry.verdaccio.org/@commitlint%2frules/-/rules-7.5.0.tgz#5aebc6caeb07b27a2bca2ff12c6ae93f42c01ee4"
-  integrity sha512-+qXJB8teMgJSroSfFB46g3chskYp3oo51mbXnwhQir9AvO38wb6vRVdf7w4MMh8Xubjp9Xmj+ued1MhA1AnDEg==
+"@commitlint/rules@^7.5.2":
+  version "7.5.2"
+  resolved "https://registry.yarnpkg.com/@commitlint/rules/-/rules-7.5.2.tgz#da03d754625b2e67c0a6b8b9ab89eae1952a4f2e"
+  integrity sha512-eDN1UFPcBOjdnlI3syuo7y99SjGH/dUV6S9NvBocAye8ln5dfKiI2shhWochJhl36r/kYWU8Wrvl2NZJL3c52g==
   dependencies:
-    "@commitlint/ensure" "^7.5.0"
+    "@commitlint/ensure" "^7.5.2"
     "@commitlint/message" "^7.5.0"
     "@commitlint/to-lines" "^7.5.0"
     babel-runtime "^6.23.0"
@@ -1146,13 +1146,13 @@
     babel-plugin-emotion "9.2.10"
     babel-plugin-flow-runtime "0.18.0"
 
-"@verdaccio/file-locking@0.0.7":
-  version "0.0.7"
-  resolved "https://registry.verdaccio.org/@verdaccio%2ffile-locking/-/file-locking-0.0.7.tgz#5fd1b2bd391e54fa32d079002b5f7ba90844e344"
-  integrity sha512-yTecDiJrYJMNnsPA4Nminygc/bPRf2HB6Pj/o/IS8scljYvV++LRXuglefM1I7p18qs3mcgX/bofCZM4x2SOJA==
+"@verdaccio/file-locking@0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@verdaccio/file-locking/-/file-locking-0.0.8.tgz#6acb62e17db2fa093f86158e4a1c0b2802a69359"
+  integrity sha512-kK7siED1Yc/t8+G3Iyb0vdQ6mM+TKNW2wM8LO0D6bXg3rBWlf863JG7JIedSGUeMzwFOKjX75jreiE+xVeAb3w==
   dependencies:
-    lockfile "1.0.3"
-    lodash "4.17.10"
+    lockfile "1.0.4"
+    lodash "4.17.11"
 
 "@verdaccio/streams@2.0.0-beta.0":
   version "2.0.0-beta.0"
@@ -4504,10 +4504,12 @@ locate-path@^3.0.0:
     p-locate "^3.0.0"
     path-exists "^3.0.0"
 
-lockfile@1.0.3:
-  version "1.0.3"
-  resolved "https://registry.verdaccio.org/lockfile/-/lockfile-1.0.3.tgz#2638fc39a0331e9cac1a04b71799931c9c50df79"
-  integrity sha1-Jjj8OaAzHpysGgS3F5mTHJxQ33k=
+lockfile@1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/lockfile/-/lockfile-1.0.4.tgz#07f819d25ae48f87e538e6578b6964a4981a5609"
+  integrity sha512-cvbTwETRfsFh4nHsL1eGWapU1XFi5Ot9E85sWAwia7Y7EgB7vfqcZhTKZ+l7hCGxSPoushMv5GKhT5PdLv03WA==
+  dependencies:
+    signal-exit "^3.0.2"
 
 lodash._reinterpolate@~3.0.0:
   version "3.0.0"
@@ -4543,11 +4545,6 @@ lodash.unescape@4.0.1:
   version "4.0.1"
   resolved "https://registry.verdaccio.org/lodash.unescape/-/lodash.unescape-4.0.1.tgz#bf2249886ce514cda112fae9218cdc065211fc9c"
   integrity sha1-vyJJiGzlFM2hEvrpIYzcBlIR/Jw=
-
-lodash@4.17.10:
-  version "4.17.10"
-  resolved "https://registry.verdaccio.org/lodash/-/lodash-4.17.10.tgz#1b7793cf7259ea38fb3661d4d38b3260af8ae4e7"
-  integrity sha512-UejweD1pDoXu+AD825lWwp4ZGtSwgnpZxb3JDViD7StjQz+Nb/6l093lx4OQ0foGWNRoc19mWy7BzL+UAK2iVg==
 
 lodash@4.17.11, lodash@^4.13.1, lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.4, lodash@^4.17.5, lodash@^4.2.1:
   version "4.17.11"

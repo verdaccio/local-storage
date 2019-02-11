@@ -26,7 +26,7 @@
     "mkdirp": "0.5.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "7.5.0",
+    "@commitlint/cli": "7.5.2",
     "@commitlint/config-conventional": "7.5.0",
     "@types/http-errors": "1.6.1",
     "@types/jest": "23.3.13",
