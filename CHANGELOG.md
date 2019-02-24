@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.1.7"></a>
+## [1.1.7](https://github.com/verdaccio/local-storage/compare/v1.1.6...v1.1.7) (2019-02-24)
+
+
+### Bug Fixes
+
+* avoid open write stream if resource exist [#1191](https://github.com/verdaccio/local-storage/issues/1191) ([2c474b2](https://github.com/verdaccio/local-storage/commit/2c474b2))
+
+
+
 <a name="1.1.6"></a>
 ## [1.1.6](https://github.com/verdaccio/local-storage/compare/v1.1.5...v1.1.6) (2019-02-11)
 
