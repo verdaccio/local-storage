@@ -48,7 +48,7 @@
     "minimatch": "3.0.4",
     "prettier": "1.16.4",
     "rmdir-sync": "1.0.1",
-    "standard-version": "4.4.0",
+    "standard-version": "5.0.2",
     "typescript": "3.2.1"
   },
   "publishConfig": {
