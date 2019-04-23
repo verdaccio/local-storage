@@ -50,7 +50,7 @@ describe('Utitlies', () => {
   describe('find packages', () => {
     test('should fails on wrong storage path', async () => {
       try {
-        await findPackages('./no_such_folder_fake', jest.fn(() => true));
+        await findPackages('./no_such_folder_fake');
       } catch (e) {
         expect(e.code).toEqual(noSuchFile);
       }
@@ -58,11 +58,20 @@ describe('Utitlies', () => {
 
     test('should fetch all packages from valid storage', async () => {
       const storage = path.join(__dirname, '__fixtures__/findPackages');
-      const validator = jest.fn(file => file.indexOf('.') === -1);
-      const pkgs = await findPackages(storage, validator);
-      // the result is 7 due number of packages on "findPackages" directory
-      expect(pkgs).toHaveLength(5);
-      expect(validator).toHaveBeenCalledTimes(8);
+      const pkgs = await findPackages(storage);
+      
+      expect(Object.keys(pkgs.packages)).toHaveLength(5);
+      expect(pkgs.stats.packages_count).toBe(5);
+      expect(pkgs.stats.versions_count).toBe(2);
+
+      expect(pkgs.packages['@scoped-test/pkg-1']).toHaveLength(1);
+      expect(pkgs.packages['@scoped-test/pkg2']).toHaveLength(0);
+      expect(pkgs.packages['@scoped_second/pkg1']).toHaveLength(0);
+      expect(pkgs.packages['@scoped_second/pkg2']).toHaveLength(0);
+      expect(pkgs.packages['pk3']).toHaveLength(1);
+
+      expect(pkgs.packages['@scoped-test/pkg-1']).toEqual(['0.1.1-beta.1']);
+      expect(pkgs.packages['pk3']).toEqual(['1.0.0']);
     });
   });
 });
