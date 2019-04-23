@@ -47,6 +47,7 @@
     "jest": "24.5.0",
     "minimatch": "3.0.4",
     "prettier": "1.16.4",
+    "promise-cache-decorator": "0.3.14",
     "rmdir-sync": "1.0.1",
     "standard-version": "5.0.2",
     "typescript": "3.2.1"

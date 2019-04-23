@@ -1,3 +1,6 @@
 {
-  "presets": [["@verdaccio", {"typescript": true}]]
+  "presets": [["@verdaccio", {"typescript": true}]],
+  "plugins": [
+    ["@babel/plugin-proposal-decorators", { "legacy":true }]
+  ]
 }

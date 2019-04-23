@@ -4,11 +4,13 @@ import Path from 'path';
 // $FlowFixMe
 import async from 'async';
 import mkdirp from 'mkdirp';
+import cached from 'promise-cache-decorator';
 
 import LocalDriver, { noSuchFile } from './local-fs';
 import { loadPrivatePackages } from './pkg-utils';
 
 import { IPackageStorage, IPluginStorage, StorageList, LocalStorage, Logger, Config, Callback, PackageAccess } from '@verdaccio/types';
+import { findPackages } from "./utils";
 
 const DEPRECATED_DB_NAME: string = '.sinopia-db.json';
 const DB_NAME: string = '.verdaccio-db.json';
@@ -243,6 +245,18 @@ class LocalDatabase implements IPluginStorage<{}> {
     const packageStoragePath: string = Path.join(Path.resolve(Path.dirname(this.config.self_path || ''), packagePath), packageName);
 
     return new LocalDriver(packageStoragePath, this.logger);
+  }
+
+  /**
+   * Get list of all chached package names with all vrsions
+   */
+  @cached({
+    id: 'all-local-packages-list',
+    type: 'age',
+    maxAge: 60 * 1000, // TTL = 1 minute
+  })
+  getPackagesAll() {
+    return findPackages(Path.dirname(this.path));
   }
 
   /**
