@@ -59,10 +59,10 @@ describe('Utitlies', () => {
     test('should fetch all packages from valid storage', async () => {
       const storage = path.join(__dirname, '__fixtures__/findPackages');
       const pkgs = await findPackages(storage);
-      
+
       expect(Object.keys(pkgs.packages)).toHaveLength(5);
-      expect(pkgs.stats.packages_count).toBe(5);
-      expect(pkgs.stats.versions_count).toBe(2);
+      expect(pkgs.stats.packagesCount).toBe(5);
+      expect(pkgs.stats.versionsCount).toBe(2);
 
       expect(pkgs.packages['@scoped-test/pkg-1']).toHaveLength(1);
       expect(pkgs.packages['@scoped-test/pkg2']).toHaveLength(0);

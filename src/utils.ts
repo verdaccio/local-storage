@@ -30,25 +30,23 @@ function hasScope(file: string) {
 }
 
 async function getVersions(scopePath: string, packageName: string): Promise<string[]> {
-  const versions: string[] = [];
-  const arr: string[] = await readDirectory(scopePath);
-  arr.forEach( (filePath: string) => {
-    const fileName = path.basename( filePath);
-    // fileName should start with package name and should ends with '.tgz'
-    if (fileName.indexOf(packageName)===0 && fileName.indexOf('.tgz')!==-1) {
-      const v: string = (fileName.split(packageName+'-')[1] || '').replace('.tgz', '');
-      versions.push(v);
-    }
-  });
-  return versions;
+  const fileList: string[] = await readDirectory(scopePath);
+  return fileList
+    .filter( (fileName: string) => {
+      // fileName should start with package name and should ends with '.tgz'
+      return (fileName.indexOf(packageName)===0 && fileName.indexOf('.tgz')!==-1);
+    })
+    .map( (fileName: string) => {
+      return (fileName.split(packageName+'-')[1] || '').replace('.tgz', '');
+    });
 }
 
 
 export async function findPackages(storagePath: string) {
   //stats
   const startTS = Date.now();
-  let packages_count = 0;
-  let versions_count = 0;
+  let packagesCount = 0;
+  let versionsCount = 0;
 
   const listPackages: any = {};
   return new Promise(async (resolve, reject) => {
@@ -70,12 +68,9 @@ export async function findPackages(storagePath: string) {
               if (stats.isDirectory()) {                
                 const versions = await getVersions(scopePath, scopedDirName);
                 // list content of such directory
-                listPackages[`${directory}/${scopedDirName}`] = //{
-//                  path: scopePath,
-                  versions
-//                };
-                packages_count++;
-                versions_count += versions.length;
+                listPackages[`${directory}/${scopedDirName}`] = versions;
+                packagesCount++;
+                versionsCount += versions.length;
               }
             }
           } else {
@@ -85,12 +80,9 @@ export async function findPackages(storagePath: string) {
             if (stats.isDirectory()) {                
 
               const versions = await getVersions(scopePath, directory);
-              listPackages[directory] = //{
-//                path: scopePath,
-                versions
-//              };
-              packages_count++;
-              versions_count += versions.length;
+              listPackages[directory] = versions;
+              packagesCount++;
+              versionsCount += versions.length;
             }
           }
         }
@@ -104,8 +96,8 @@ export async function findPackages(storagePath: string) {
       stats: {
         ts: Date.now(),
         duration: Date.now() - startTS,
-        packages_count,
-        versions_count,
+        packagesCount,
+        versionsCount,
       }
     });
   });
