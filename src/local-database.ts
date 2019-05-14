@@ -8,7 +8,7 @@ import mkdirp from 'mkdirp';
 import LocalDriver, { noSuchFile } from './local-fs';
 import { loadPrivatePackages } from './pkg-utils';
 
-import { IPackageStorage, IPluginStorage, StorageList, LocalStorage, Logger, Config, Callback } from '@verdaccio/types';
+import { IPackageStorage, IPluginStorage, StorageList, LocalStorage, Logger, Config, Callback, Token, TokenFilter } from '@verdaccio/types';
 import { getInternalError } from "@verdaccio/commons-api/lib";
 
 const DEPRECATED_DB_NAME = '.sinopia-db.json';
@@ -156,6 +156,18 @@ class LocalDatabase implements IPluginStorage<{}> {
       },
       onEnd
     );
+  }
+
+  public saveToken(token: Token): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
+  public deleteToken(user: string, tokenKey: string): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
+  public readTokens(filter: TokenFilter): Promise<Token[]> {
+    throw new Error("Method not implemented.");
   }
 
   private _getTime(time: number, mtime: Date) {
