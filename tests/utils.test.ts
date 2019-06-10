@@ -3,6 +3,7 @@ import { findPackages } from '../src/utils';
 import { loadPrivatePackages } from '../src/pkg-utils';
 import logger from './__mocks__/Logger';
 import { noSuchFile } from '../src/local-fs';
+import fs from 'fs';
 
 describe('Utitlies', () => {
   const loadDb = (name): string => path.join(__dirname, '__fixtures__/databases', `${name}.json`);
@@ -34,16 +35,15 @@ describe('Utitlies', () => {
   });
 
   test('should handle null read values and return empty database', () => {
-    jest.doMock('fs', () => {
-      return {
-        readFileSync: () => null
-      };
-    });
+    const spy = jest.spyOn(fs, 'readFileSync');
+    spy.mockReturnValue(null);
 
     const database = loadDb('ok');
     const db = loadPrivatePackages(database, logger);
 
     expect(db.list).toHaveLength(0);
+
+    spy.mockClear();
   });
 
   describe('find packages', () => {

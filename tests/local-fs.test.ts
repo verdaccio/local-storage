@@ -101,7 +101,7 @@ describe('Local FS test', () => {
 
   describe('removePackage() group', () => {
     beforeEach(() => {
-      mkdirp(path.join(localTempStorage, '_toDelete'));
+      mkdirp.sync(path.join(localTempStorage, '_toDelete'));
     });
 
     test('removePackage() success', done => {
@@ -159,7 +159,7 @@ describe('Local FS test', () => {
     beforeEach(() => {
       const writeTarballFolder: string = path.join(localTempStorage, '_writeTarball');
       rm(writeTarballFolder);
-      mkdirp(writeTarballFolder);
+      mkdirp.sync(writeTarballFolder);
     });
 
     test('writeTarball() success', done => {
