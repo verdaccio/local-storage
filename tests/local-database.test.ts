@@ -20,7 +20,7 @@ describe('Local Database', () => {
     fs.writeFileSync = jest.fn();
     locaDatabase = new LocalDatabase(optionsPlugin.config, optionsPlugin.logger);
     // clean database
-    (locaDatabase as any)._sync();
+    (locaDatabase as LocalDatabase).clean();
     jest.clearAllMocks();
     jest.resetModules();
   });
@@ -136,7 +136,7 @@ describe('Local Database', () => {
   describe('search', () => {
     const onPackageMock = jest.fn((item, cb) => cb());
     const validatorMock = jest.fn(() => true);
-    const callSearch = (db, numberTimesCalled, cb) => {
+    const callSearch = (db, numberTimesCalled, cb): void => {
       db.search(
         onPackageMock,
         function onEnd() {

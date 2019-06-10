@@ -5,7 +5,7 @@ import logger from './__mocks__/Logger';
 import { noSuchFile } from '../src/local-fs';
 
 describe('Utitlies', () => {
-  const loadDb = name => path.join(__dirname, '__fixtures__/databases', `${name}.json`);
+  const loadDb = (name): string => path.join(__dirname, '__fixtures__/databases', `${name}.json`);
 
   beforeEach(() => {
     jest.resetModules();
@@ -40,7 +40,6 @@ describe('Utitlies', () => {
       };
     });
 
-    const { loadPrivatePackages } = require('../src/pkg-utils');
     const database = loadDb('ok');
     const db = loadPrivatePackages(database, logger);
 
