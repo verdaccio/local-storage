@@ -4,14 +4,25 @@ import Path from 'path';
 // $FlowFixMe
 import async from 'async';
 import mkdirp from 'mkdirp';
+import stream from 'stream';
 
 import LocalDriver, { noSuchFile } from './local-fs';
 import { loadPrivatePackages } from './pkg-utils';
 
 import { IPackageStorage, IPluginStorage, StorageList, LocalStorage, Logger, Config, Callback, Token, TokenFilter } from '@verdaccio/types';
 
+import level from 'level';
+
 const DEPRECATED_DB_NAME = '.sinopia-db.json';
 const DB_NAME = '.verdaccio-db.json';
+const TOKEN_DB_NAME = 'token-db';
+
+interface Level {
+  put(key: string, token, fn?: Function): void;
+  get(key: string, fn?: Function): void;
+  del(key: string, fn?: Function): void;
+  createReadStream(options?: object): stream.Readable;
+}
 
 /**
  * Handle local database.
@@ -23,6 +34,7 @@ class LocalDatabase implements IPluginStorage<{}> {
   public data: LocalStorage;
   public config: Config;
   public locked: boolean;
+  public tokenDb;
 
   /**
    * Load an parse the local json database.
@@ -274,16 +286,16 @@ class LocalDatabase implements IPluginStorage<{}> {
    * @private
    */
   private _buildStoragePath(config: Config): string {
-    const dbGenPath = function(dbName: string): string {
-      return Path.join(Path.resolve(Path.dirname(config.self_path || ''), config.storage as string, dbName));
-    };
-
-    const sinopiadbPath: string = dbGenPath(DEPRECATED_DB_NAME);
+    const sinopiadbPath: string = this._dbGenPath(DEPRECATED_DB_NAME, config);
     if (fs.existsSync(sinopiadbPath)) {
       return sinopiadbPath;
     }
 
-    return dbGenPath(DB_NAME);
+    return this._dbGenPath(DB_NAME, config);
+  }
+
+  private _dbGenPath(dbName: string, config: Config): string {
+    return Path.join(Path.resolve(Path.dirname(config.self_path || ''), config.storage as string, dbName));
   }
 
   /**
@@ -311,20 +323,74 @@ class LocalDatabase implements IPluginStorage<{}> {
     }
   }
 
-  public clean() {
+  public clean(): void {
     this._sync();
   }
 
-  public saveToken(token: Token): Promise<Token> {
-    throw new Error('Method not implemented.');
+  private getTokenDb(): Level {
+    if (!this.tokenDb) {
+      this.tokenDb = level(this._dbGenPath(TOKEN_DB_NAME, this.config), {
+        valueEncoding: 'json'
+      });
+    }
+
+    return this.tokenDb;
   }
 
-  public deleteToken(user: string, tokenKey: string): Promise<Token> {
-    throw new Error('Method not implemented.');
+  public saveToken(token: Token): Promise<void> {
+    const key = this._getTokenKey(token);
+    const db = this.getTokenDb();
+
+    return new Promise((resolve, reject) => {
+      db.put(key, token, err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+  }
+
+  public deleteToken(user: string, tokenKey: string): Promise<void> {
+    const key = this._compoundTokenKey(user, tokenKey);
+    const db = this.getTokenDb();
+    return new Promise((resolve, reject) => {
+      db.del(key, err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
   }
 
   public readTokens(filter: TokenFilter): Promise<Token[]> {
-    throw new Error('Method not implemented.');
+    return new Promise((resolve, reject) => {
+      const tokens: Token[] = [];
+      const key = filter.user + ':';
+      const db = this.getTokenDb();
+      const stream = db.createReadStream({
+        gte: key,
+        lte: String.fromCharCode(key.charCodeAt(0) + 1)
+      });
+
+      stream.on('data', data => tokens.push(data));
+
+      stream.once('end', () => resolve(tokens));
+
+      stream.once('error', err => reject(err));
+    });
+  }
+
+  private _getTokenKey(token: Token): string {
+    const { user, key } = token;
+    return this._compoundTokenKey(user, key);
+  }
+
+  private _compoundTokenKey(user: string, key: string): string {
+    return `${user}:${key}`;
   }
 }
 

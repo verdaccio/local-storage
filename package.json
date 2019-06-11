@@ -22,6 +22,7 @@
     "@verdaccio/streams": "2.0.0",
     "async": "3.0.1-0",
     "http-errors": "1.7.2",
+    "level": "^5.0.1",
     "lodash": "4.17.11",
     "mkdirp": "0.5.1"
   },
@@ -35,17 +36,17 @@
     "@types/node": "11.12.1",
     "@typescript-eslint/eslint-plugin": "1.5.0",
     "@verdaccio/babel-preset": "0.1.0",
-    "@verdaccio/types": "5.0.0-beta.4",
     "@verdaccio/eslint-config": "0.0.1",
+    "@verdaccio/types": "6.2.0",
     "codecov": "3.2.0",
     "cross-env": "5.2.0",
-    "eslint": "5.15.3",
+    "eslint": "5.16.0",
     "husky": "0.14.3",
     "jest": "24.5.0",
     "minimatch": "3.0.4",
     "rmdir-sync": "1.0.1",
     "standard-version": "5.0.2",
-    "typescript": "3.2.1"
+    "typescript": "3.2.4"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
