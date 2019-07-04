@@ -13,9 +13,10 @@
     "build": "npm run build:types && npm run build:js",
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "babel src/ --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
-    "prepublish": "npm run build",
+    "prepublish": "npm run snyk-protect; npm run build",
     "format": "prettier --single-quote --trailing-comma none --write \"{src,test}/**/*.js\"",
-    "coverage:publish": "codecov"
+    "coverage:publish": "codecov",
+    "snyk-protect": "snyk protect"
   },
   "dependencies": {
     "@verdaccio/file-locking": "1.0.3",
@@ -23,7 +24,8 @@
     "async": "3.1.0",
     "http-errors": "1.7.3",
     "lodash": "4.17.11",
-    "mkdirp": "0.5.1"
+    "mkdirp": "0.5.1",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "@commitlint/cli": "8.0.0",
@@ -65,5 +67,6 @@
   },
   "author": "Juan Picado <juanpicado19@gmail.com>",
   "private": false,
-  "license": "MIT"
+  "license": "MIT",
+  "snyk": true
 }
