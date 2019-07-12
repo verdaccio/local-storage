@@ -17,17 +17,17 @@ const DB_NAME = '.verdaccio-db.json';
  * Handle local database.
  */
 class LocalDatabase implements IPluginStorage<{}> {
-  path: string;
-  logger: Logger;
-  data: LocalStorage;
-  config: Config;
-  locked: boolean;
+  public path: string;
+  public logger: Logger;
+  public data: LocalStorage;
+  public config: Config;
+  public locked: boolean;
 
   /**
    * Load an parse the local json database.
    * @param {*} path the database path
    */
-  constructor(config: Config, logger: Logger) {
+  public constructor(config: Config, logger: Logger) {
     this.config = config;
     this.path = this._buildStoragePath(config);
     this.logger = logger;
@@ -36,13 +36,14 @@ class LocalDatabase implements IPluginStorage<{}> {
     this._sync();
   }
 
-  getSecret(): Promise<any> {
+  getSecret(): Promise<string> {
     return Promise.resolve(this.data.secret);
   }
 
-  setSecret(secret: string): Promise<any> {
-    return new Promise((resolve, reject) => {
+  setSecret(secret: string): Promise<string> {
+    return new Promise(resolve => {
       this.data.secret = secret;
+
       resolve(this._sync());
     });
   }
@@ -52,7 +53,7 @@ class LocalDatabase implements IPluginStorage<{}> {
    * @param {*} name
    * @return {Error|*}
    */
-  add(name: string, cb: Callback) {
+  public add(name: string, cb: Callback) {
     if (this.data.list.indexOf(name) === -1) {
       this.data.list.push(name);
       cb(this._sync());
@@ -61,7 +62,7 @@ class LocalDatabase implements IPluginStorage<{}> {
     }
   }
 
-  search(onPackage: Callback, onEnd: Callback, validateName: any): void {
+  public search(onPackage: Callback, onEnd: Callback, validateName: any): void {
     const storages = this._getCustomPackageLocalStorages();
     this.logger.trace(`local-storage: [search]: ${JSON.stringify(storages)}`);
     const base = Path.dirname(this.config.self_path);
@@ -151,11 +152,11 @@ class LocalDatabase implements IPluginStorage<{}> {
     );
   }
 
-  _getTime(time: number, mtime: Date) {
+  private _getTime(time: number, mtime: Date) {
     return time ? time : mtime;
   }
 
-  _getCustomPackageLocalStorages() {
+  private _getCustomPackageLocalStorages() {
     const storages = {};
 
     // add custom storage if exist
@@ -184,7 +185,7 @@ class LocalDatabase implements IPluginStorage<{}> {
    * @param {*} name
    * @return {Error|*}
    */
-  remove(name: string, cb: Callback) {
+  public remove(name: string, cb: Callback) {
     this.get((err, data) => {
       if (err) {
         cb(new Error('error on get'));
@@ -203,7 +204,7 @@ class LocalDatabase implements IPluginStorage<{}> {
    * Return all database elements.
    * @return {Array}
    */
-  get(cb: Callback) {
+  public get(cb: Callback) {
     cb(null, this.data.list);
   }
 
@@ -211,7 +212,7 @@ class LocalDatabase implements IPluginStorage<{}> {
    * Syncronize {create} database whether does not exist.
    * @return {Error|*}
    */
-  _sync() {
+  private _sync() {
     if (this.locked) {
       this.logger.error('Database is locked, please check error message printed during startup to prevent data loss.');
       return new Error('Verdaccio database is locked, please contact your administrator to checkout logs during verdaccio startup.');
@@ -232,7 +233,7 @@ class LocalDatabase implements IPluginStorage<{}> {
     }
   }
 
-  getPackageStorage(packageName: string): IPackageStorage {
+  public getPackageStorage(packageName: string): IPackageStorage {
     const packageAccess = this.config.getMatchedPackagesSpec(packageName);
 
     const packagePath: string = this._getLocalStoragePath(packageAccess ? packageAccess.storage : undefined);
@@ -253,7 +254,7 @@ class LocalDatabase implements IPluginStorage<{}> {
    * @return {String}
    * @private
    */
-  _getLocalStoragePath(storage: string | void): string {
+  private _getLocalStoragePath(storage: string | void): string {
     const globalConfigStorage = this.config ? this.config.storage : undefined;
     if (_.isNil(globalConfigStorage)) {
       throw new Error('global storage is required for this plugin');
@@ -272,7 +273,7 @@ class LocalDatabase implements IPluginStorage<{}> {
    * @return {string|String|*}
    * @private
    */
-  _buildStoragePath(config: Config) {
+  private _buildStoragePath(config: Config) {
     const dbGenPath = function(dbName: string) {
       return Path.join(Path.resolve(Path.dirname(config.self_path || ''), config.storage as string, dbName));
     };
@@ -290,7 +291,7 @@ class LocalDatabase implements IPluginStorage<{}> {
    * @private
    * @return {Object}
    */
-  _fetchLocalPackages(): LocalStorage {
+  private _fetchLocalPackages(): LocalStorage {
     const list: StorageList = [];
     const emptyDatabase = { list, secret: '' };
 

@@ -5,34 +5,23 @@ import path from 'path';
 
 import _ from 'lodash';
 import mkdirp from 'mkdirp';
-import createError from 'http-errors';
-import { HttpError } from 'http-errors';
 import { UploadTarball, ReadTarball } from '@verdaccio/streams';
 import { unlockFile, readFile } from '@verdaccio/file-locking';
-import { Callback, Logger, Package, ILocalPackageManager, CallbackError, IUploadTarball } from '@verdaccio/types';
+import { Callback, Logger, Package, ILocalPackageManager, IUploadTarball } from '@verdaccio/types';
+import { getCode, getInternalError, getNotFound, VerdaccioError } from '@verdaccio/commons-api/lib';
 
 export const fileExist = 'EEXISTS';
 export const noSuchFile = 'ENOENT';
 export const resourceNotAvailable = 'EAGAIN';
 export const pkgFileName = 'package.json';
 
-type CallbackFS = NodeJS.ErrnoException | null;
-
-export const fSError = function(message: string, code: number = 409): HttpError {
-  const err: HttpError = createError(code, message);
-  // $FlowFixMe
+export const fSError = function(message: string, code: number = 409): VerdaccioError {
+  const err: VerdaccioError = getCode(code, message);
+  // FIXME: we should return http-status codes here instead, future improvement
+  // @ts-ignore
   err.code = message;
 
   return err;
-};
-
-export const ErrorCode = {
-  get503: () => {
-    return fSError('resource temporarily unavailable', 500);
-  },
-  get404: () => {
-    return fSError('no such package available', 404);
-  }
 };
 
 const tempFile = function(str) {
@@ -112,9 +101,9 @@ export default class LocalFS implements ILocalFSPackageManager {
 
       if (_.isNil(err) === false) {
         if (err.code === resourceNotAvailable) {
-          return unLockCallback(ErrorCode.get503());
+          return unLockCallback(getInternalError('resource temporarily unavailable'));
         } else if (err.code === noSuchFile) {
-          return unLockCallback(ErrorCode.get404());
+          return unLockCallback(getNotFound());
         } else {
           return unLockCallback(err);
         }
