@@ -18,7 +18,7 @@
     "coverage:publish": "codecov"
   },
   "dependencies": {
-    "@verdaccio/commons-api": "0.1.0",
+    "@verdaccio/commons-api": "0.1.1",
     "@verdaccio/file-locking": "1.0.3",
     "@verdaccio/streams": "2.0.0",
     "async": "3.1.0",

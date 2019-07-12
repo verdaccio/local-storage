@@ -1266,11 +1266,6 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
-"@types/http-errors@1.6.1":
-  version "1.6.1"
-  resolved "https://registry.verdaccio.org/@types%2fhttp-errors/-/http-errors-1.6.1.tgz#367744a6c04b833383f497f647cc3690b0cd4055"
-  integrity sha512-s+RHKSGc3r0m3YEE2UXomJYrpQaY9cDmNDLU2XvG1/LAZsQ7y8emYkTLfcw/ByDtcsTyRQKwr76Bj4PkN2hfWg==
-
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0":
   version "2.0.1"
   resolved "https://registry.verdaccio.org/@types%2fistanbul-lib-coverage/-/istanbul-lib-coverage-2.0.1.tgz#42995b446db9a48a11a07ec083499a860e9138ff"
@@ -1419,10 +1414,10 @@
     babel-plugin-emotion "10.0.9"
     babel-plugin-flow-runtime "0.19.0"
 
-"@verdaccio/commons-api@0.1.0":
-  version "0.1.0"
-  resolved "https://registry.verdaccio.org/@verdaccio%2fcommons-api/-/commons-api-0.1.0.tgz#6d36820038b64ee34026a2dcf15a15d6c3623edf"
-  integrity sha512-qWIaXL9fzUabiAKRp1idROBeCn3GUwfMjwpOd3wDHwP1LQJZh0CDifIP+p0DROx2mR/fAteu0SIRRP5hV41Ryg==
+"@verdaccio/commons-api@0.1.1":
+  version "0.1.1"
+  resolved "https://registry.verdaccio.org/@verdaccio%2fcommons-api/-/commons-api-0.1.1.tgz#2248e98fb43b258da026e761140141e3f2fd213b"
+  integrity sha512-n7JdKfac9TV5CubXP3ZeH5Ci8Gj/Q+gPfYF5pwm9MRH5VYs3oNWFtjGsOVZEKDTeKGelnf/Ht6iuAE9LVWntiQ==
   dependencies:
     http-errors "1.7.3"
 
