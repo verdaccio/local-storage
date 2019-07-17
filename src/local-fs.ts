@@ -10,7 +10,7 @@ import { unlockFile, readFile } from '@verdaccio/file-locking';
 import { Callback, Logger, Package, ILocalPackageManager, IUploadTarball } from '@verdaccio/types';
 import { getCode, getInternalError, getNotFound, VerdaccioError } from '@verdaccio/commons-api/lib';
 
-export const fileExist = 'EEXIST';
+export const fileExist = 'EEXISTS';
 export const noSuchFile = 'ENOENT';
 export const resourceNotAvailable = 'EAGAIN';
 export const pkgFileName = 'package.json';
@@ -289,7 +289,8 @@ export default class LocalFS implements ILocalFSPackageManager {
 
     fs.open(name, 'wx', err => {
       if (err) {
-        if (err.code === fileExist) {
+        // native EEXIST used here to check exception on fs.open
+        if (err.code === 'EEXIST') {
           this.logger.trace({ name }, '[local-storage/_createFile] file cannot be created, it already exists: @{name}');
           return callback(fSError(fileExist));
         }
