@@ -12,6 +12,7 @@ import { loadPrivatePackages } from './pkg-utils';
 import { IPackageStorage, IPluginStorage, StorageList, LocalStorage, Logger, Config, Callback, Token, TokenFilter } from '@verdaccio/types';
 
 import level from 'level';
+import { getInternalError } from '@verdaccio/commons-api/lib';
 
 const DEPRECATED_DB_NAME = '.sinopia-db.json';
 const DB_NAME = '.verdaccio-db.json';
@@ -28,7 +29,6 @@ interface Level {
  * Handle local database.
  */
 class LocalDatabase implements IPluginStorage<{}> {
-  public version?: string | undefined;
   public path: string;
   public logger: Logger;
   public data: LocalStorage;
@@ -46,6 +46,9 @@ class LocalDatabase implements IPluginStorage<{}> {
     this.logger = logger;
     this.locked = false;
     this.data = this._fetchLocalPackages();
+
+    this.logger.trace({ config: JSON.stringify(this.config, null, 4) }, '[local-storage]: configuration: @{config}');
+
     this._sync();
   }
 
@@ -56,6 +59,7 @@ class LocalDatabase implements IPluginStorage<{}> {
   public setSecret(secret: string): Promise<Error | null> {
     return new Promise(resolve => {
       this.data.secret = secret;
+
       resolve(this._sync());
     });
   }
@@ -68,6 +72,8 @@ class LocalDatabase implements IPluginStorage<{}> {
   public add(name: string, cb: Callback): void {
     if (this.data.list.indexOf(name) === -1) {
       this.data.list.push(name);
+
+      this.logger.debug({ name }, '[local-storage]: the private package @{name} has been added');
       cb(this._sync());
     } else {
       cb(null);
@@ -200,12 +206,15 @@ class LocalDatabase implements IPluginStorage<{}> {
   public remove(name: string, cb: Callback): void {
     this.get((err, data) => {
       if (err) {
-        cb(new Error('error on get'));
+        cb(getInternalError('error remove private package'));
+        this.logger.error({ err }, '[local-storage/remove]: remove the private package has failed @{err}');
       }
 
       const pkgName = data.indexOf(name);
       if (pkgName !== -1) {
         this.data.list.splice(pkgName, 1);
+
+        this.logger.trace({ name }, 'local-storage: [remove] package @{name} has been removed');
       }
 
       cb(this._sync());
@@ -217,7 +226,12 @@ class LocalDatabase implements IPluginStorage<{}> {
    * @return {Array}
    */
   public get(cb: Callback): void {
-    cb(null, this.data.list);
+    const list = this.data.list;
+    const totalItems = this.data.list.length;
+
+    cb(null, list);
+
+    this.logger.trace({ totalItems} ,'local-storage: [get] full list of packages (@{totalItems}) has been fetched');
   }
 
   /**
@@ -225,22 +239,33 @@ class LocalDatabase implements IPluginStorage<{}> {
    * @return {Error|*}
    */
   private _sync(): Error | null {
+    this.logger.debug('[local-storage/_sync]: init sync database');
+
     if (this.locked) {
       this.logger.error('Database is locked, please check error message printed during startup to prevent data loss.');
       return new Error('Verdaccio database is locked, please contact your administrator to checkout logs during verdaccio startup.');
     }
     // Uses sync to prevent ugly race condition
     try {
-      mkdirp.sync(Path.dirname(this.path));
+      // https://www.npmjs.com/package/mkdirp#mkdirpsyncdir-opts
+      const folderName = Path.dirname(this.path);
+      mkdirp.sync(folderName);
+      this.logger.debug({ folderName }, '[local-storage/_sync]: folder @{folderName} created succeed');
     } catch (err) {
       // perhaps a logger instance?
+      this.logger.debug({ err }, '[local-storage/_sync/mkdirp.sync]: sync failed @{err}');
+
       return null;
     }
 
     try {
       fs.writeFileSync(this.path, JSON.stringify(this.data));
+      this.logger.debug('[local-storage/_sync/writeFileSync]: sync write succeed');
+
       return null;
     } catch (err) {
+      this.logger.debug({ err }, '[local-storage/_sync/writeFileSync]: sync failed @{err}');
+
       return err;
     }
   }
@@ -249,6 +274,7 @@ class LocalDatabase implements IPluginStorage<{}> {
     const packageAccess = this.config.getMatchedPackagesSpec(packageName);
 
     const packagePath: string = this._getLocalStoragePath(packageAccess ? packageAccess.storage : undefined);
+    this.logger.trace({ packagePath }, '[local-storage/getPackageStorage]: storage selected: @{packagePath}');
 
     if (_.isString(packagePath) === false) {
       this.logger.debug({ name: packageName }, 'this package has no storage defined: @{name}');
@@ -256,6 +282,8 @@ class LocalDatabase implements IPluginStorage<{}> {
     }
 
     const packageStoragePath: string = Path.join(Path.resolve(Path.dirname(this.config.self_path || ''), packagePath), packageName);
+
+    this.logger.trace({ packageStoragePath }, '[local-storage/getPackageStorage]: storage path: @{packageStoragePath}');
 
     return new LocalDriver(packageStoragePath, this.logger);
   }
