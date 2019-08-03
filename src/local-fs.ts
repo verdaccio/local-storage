@@ -195,7 +195,7 @@ export default class LocalFS implements ILocalFSPackageManager {
 
     const pathName: string = this._getStorage(name);
 
-    fs.access(pathName, (fileNotFound) => {
+    fs.access(pathName, fileNotFound => {
       const exists = !fileNotFound;
       if (exists) {
         uploadStream.emit('error', fSError(fileExist));

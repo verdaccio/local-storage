@@ -234,7 +234,7 @@ describe('Local Database', () => {
         }
       };
       db.createReadStream.mockImplementation(() => stream);
-      setTimeout(() => events.on['data'](token));
+      setTimeout(() => events.on['data']({value: token}));
       setTimeout(() => events.once['end']());
 
       const tokens = await locaDatabase.readTokens({ user: 'someUser' });
