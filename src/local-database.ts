@@ -313,18 +313,23 @@ class LocalDatabase implements IPluginStorage<{}> {
    * @return {string|String|*}
    * @private
    */
-  private _buildStoragePath(config: Config): string {
+  private _buildStoragePath(config: Config) {
     const sinopiadbPath: string = this._dbGenPath(DEPRECATED_DB_NAME, config);
-    if (fs.existsSync(sinopiadbPath)) {
+    try {
+      fs.accessSync(sinopiadbPath, fs.constants.F_OK);
       return sinopiadbPath;
+    } catch (err) {
+      if (err.code === noSuchFile) {
+        return this._dbGenPath(DB_NAME, config);
+      }
+
+      throw err;
     }
-
-    return this._dbGenPath(DB_NAME, config);
   }
 
-  private _dbGenPath(dbName: string, config: Config): string {
-    return Path.join(Path.resolve(Path.dirname(config.self_path || ''), config.storage as string, dbName));
-  }
+	private _dbGenPath(dbName: string, config: Config): string {
+		return Path.join(Path.resolve(Path.dirname(config.self_path || ''), config.storage as string, dbName));
+	}
 
   /**
    * Fetch local packages.
