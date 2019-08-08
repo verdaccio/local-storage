@@ -9,7 +9,17 @@ import stream from 'stream';
 import LocalDriver, { noSuchFile } from './local-fs';
 import { loadPrivatePackages } from './pkg-utils';
 
-import { IPackageStorage, IPluginStorage, StorageList, LocalStorage, Logger, Config, Callback, Token, TokenFilter } from '@verdaccio/types';
+import {
+  Callback,
+  Config,
+  IPackageStorage,
+  IPluginStorage,
+  LocalStorage,
+  Logger,
+  StorageList,
+  Token,
+  TokenFilter
+} from '@verdaccio/types';
 
 import level from 'level';
 import { getInternalError } from '@verdaccio/commons-api/lib';
@@ -20,8 +30,11 @@ const TOKEN_DB_NAME = '.token-db';
 
 interface Level {
   put(key: string, token, fn?: Function): void;
+
   get(key: string, fn?: Function): void;
+
   del(key: string, fn?: Function): void;
+
   createReadStream(options?: object): stream.Readable;
 }
 
@@ -170,34 +183,6 @@ class LocalDatabase implements IPluginStorage<{}> {
     );
   }
 
-  private _getTime(time: number, mtime: Date): number | Date {
-    return time ? time : mtime;
-  }
-
-  private _getCustomPackageLocalStorages(): object {
-    const storages = {};
-
-    // add custom storage if exist
-    if (this.config.storage) {
-      storages[this.config.storage] = true;
-    }
-
-    const { packages } = this.config;
-
-    if (packages) {
-      const listPackagesConf = Object.keys(packages || {});
-
-      listPackagesConf.map(pkg => {
-        const storage = packages[pkg].storage;
-        if (storage) {
-          storages[storage] = false;
-        }
-      });
-    }
-
-    return storages;
-  }
-
   /**
    * Remove an element from the database.
    * @param {*} name
@@ -231,43 +216,7 @@ class LocalDatabase implements IPluginStorage<{}> {
 
     cb(null, list);
 
-    this.logger.trace({ totalItems} ,'local-storage: [get] full list of packages (@{totalItems}) has been fetched');
-  }
-
-  /**
-   * Syncronize {create} database whether does not exist.
-   * @return {Error|*}
-   */
-  private _sync(): Error | null {
-    this.logger.debug('[local-storage/_sync]: init sync database');
-
-    if (this.locked) {
-      this.logger.error('Database is locked, please check error message printed during startup to prevent data loss.');
-      return new Error('Verdaccio database is locked, please contact your administrator to checkout logs during verdaccio startup.');
-    }
-    // Uses sync to prevent ugly race condition
-    try {
-      // https://www.npmjs.com/package/mkdirp#mkdirpsyncdir-opts
-      const folderName = Path.dirname(this.path);
-      mkdirp.sync(folderName);
-      this.logger.debug({ folderName }, '[local-storage/_sync]: folder @{folderName} created succeed');
-    } catch (err) {
-      // perhaps a logger instance?
-      this.logger.debug({ err }, '[local-storage/_sync/mkdirp.sync]: sync failed @{err}');
-
-      return null;
-    }
-
-    try {
-      fs.writeFileSync(this.path, JSON.stringify(this.data));
-      this.logger.debug('[local-storage/_sync/writeFileSync]: sync write succeed');
-
-      return null;
-    } catch (err) {
-      this.logger.debug({ err }, '[local-storage/_sync/writeFileSync]: sync failed @{err}');
-
-      return err;
-    }
+    this.logger.trace({ totalItems }, 'local-storage: [get] full list of packages (@{totalItems}) has been fetched');
   }
 
   public getPackageStorage(packageName: string): IPackageStorage {
@@ -288,81 +237,8 @@ class LocalDatabase implements IPluginStorage<{}> {
     return new LocalDriver(packageStoragePath, this.logger);
   }
 
-  /**
-   * Verify the right local storage location.
-   * @param {String} path
-   * @return {String}
-   * @private
-   */
-  private _getLocalStoragePath(storage: string | void): string {
-    const globalConfigStorage = this.config ? this.config.storage : undefined;
-    if (_.isNil(globalConfigStorage)) {
-      throw new Error('global storage is required for this plugin');
-    } else {
-      if (_.isNil(storage) === false && _.isString(storage)) {
-        return Path.join(globalConfigStorage as string, storage as string);
-      }
-
-      return globalConfigStorage as string;
-    }
-  }
-
-  /**
-   * Build the local database path.
-   * @param {Object} config
-   * @return {string|String|*}
-   * @private
-   */
-  private _buildStoragePath(config: Config): string {
-    const sinopiadbPath: string = this._dbGenPath(DEPRECATED_DB_NAME, config);
-    if (fs.existsSync(sinopiadbPath)) {
-      return sinopiadbPath;
-    }
-
-    return this._dbGenPath(DB_NAME, config);
-  }
-
-  private _dbGenPath(dbName: string, config: Config): string {
-    return Path.join(Path.resolve(Path.dirname(config.self_path || ''), config.storage as string, dbName));
-  }
-
-  /**
-   * Fetch local packages.
-   * @private
-   * @return {Object}
-   */
-  private _fetchLocalPackages(): LocalStorage {
-    const list: StorageList = [];
-    const emptyDatabase = { list, secret: '' };
-
-    try {
-      const db = loadPrivatePackages(this.path, this.logger);
-
-      return db;
-    } catch (err) {
-      // readFileSync is platform specific, macOS, Linux and Windows thrown an error
-      // Only recreate if file not found to prevent data loss
-      if (err.code !== noSuchFile) {
-        this.locked = true;
-        this.logger.error('Failed to read package database file, please check the error printed below:\n', `File Path: ${this.path}\n\n ${err.message}`);
-      }
-
-      return emptyDatabase;
-    }
-  }
-
   public clean(): void {
     this._sync();
-  }
-
-  private getTokenDb(): Level {
-    if (!this.tokenDb) {
-      this.tokenDb = level(this._dbGenPath(TOKEN_DB_NAME, this.config), {
-        valueEncoding: 'json'
-      });
-    }
-
-    return this.tokenDb;
   }
 
   public saveToken(token: Token): Promise<void> {
@@ -412,6 +288,148 @@ class LocalDatabase implements IPluginStorage<{}> {
 
       stream.once('error', err => reject(err));
     });
+  }
+
+  private _getTime(time: number, mtime: Date): number | Date {
+    return time ? time : mtime;
+  }
+
+  private _getCustomPackageLocalStorages(): object {
+    const storages = {};
+
+    // add custom storage if exist
+    if (this.config.storage) {
+      storages[this.config.storage] = true;
+    }
+
+    const { packages } = this.config;
+
+    if (packages) {
+      const listPackagesConf = Object.keys(packages || {});
+
+      listPackagesConf.map(pkg => {
+        const storage = packages[pkg].storage;
+        if (storage) {
+          storages[storage] = false;
+        }
+      });
+    }
+
+    return storages;
+  }
+
+  /**
+   * Syncronize {create} database whether does not exist.
+   * @return {Error|*}
+   */
+  private _sync(): Error | null {
+    this.logger.debug('[local-storage/_sync]: init sync database');
+
+    if (this.locked) {
+      this.logger.error('Database is locked, please check error message printed during startup to prevent data loss.');
+      return new Error('Verdaccio database is locked, please contact your administrator to checkout logs during verdaccio startup.');
+    }
+    // Uses sync to prevent ugly race condition
+    try {
+      // https://www.npmjs.com/package/mkdirp#mkdirpsyncdir-opts
+      const folderName = Path.dirname(this.path);
+      mkdirp.sync(folderName);
+      this.logger.debug({ folderName }, '[local-storage/_sync]: folder @{folderName} created succeed');
+    } catch (err) {
+      // perhaps a logger instance?
+      this.logger.debug({ err }, '[local-storage/_sync/mkdirp.sync]: sync failed @{err}');
+
+      return null;
+    }
+
+    try {
+      fs.writeFileSync(this.path, JSON.stringify(this.data));
+      this.logger.debug('[local-storage/_sync/writeFileSync]: sync write succeed');
+
+      return null;
+    } catch (err) {
+      this.logger.debug({ err }, '[local-storage/_sync/writeFileSync]: sync failed @{err}');
+
+      return err;
+    }
+  }
+
+  /**
+   * Verify the right local storage location.
+   * @param {String} path
+   * @return {String}
+   * @private
+   */
+  private _getLocalStoragePath(storage: string | void): string {
+    const globalConfigStorage = this.config ? this.config.storage : undefined;
+    if (_.isNil(globalConfigStorage)) {
+      throw new Error('global storage is required for this plugin');
+    } else {
+      if (_.isNil(storage) === false && _.isString(storage)) {
+        return Path.join(globalConfigStorage as string, storage as string);
+      }
+
+      return globalConfigStorage as string;
+    }
+  }
+
+  /**
+   * Build the local database path.
+   * @param {Object} config
+   * @return {string|String|*}
+   * @private
+   */
+  private _buildStoragePath(config: Config): string {
+    const sinopiadbPath: string = this._dbGenPath(DEPRECATED_DB_NAME, config);
+    try {
+      fs.accessSync(sinopiadbPath, fs.constants.F_OK);
+      return sinopiadbPath;
+    } catch (err) {
+      if (err.code === noSuchFile) {
+        return this._dbGenPath(DB_NAME, config);
+      }
+
+      throw err;
+    }
+  }
+
+  private _dbGenPath(dbName: string, config: Config): string {
+    return Path.join(Path.resolve(Path.dirname(config.self_path || ''), config.storage as string, dbName));
+  }
+
+  /**
+   * Fetch local packages.
+   * @private
+   * @return {Object}
+   */
+  private _fetchLocalPackages(): LocalStorage {
+    const list: StorageList = [];
+    const emptyDatabase = { list, secret: '' };
+
+    try {
+      const db = loadPrivatePackages(this.path, this.logger);
+
+      return db;
+    } catch (err) {
+      // readFileSync is platform specific, macOS, Linux and Windows thrown an error
+      // Only recreate if file not found to prevent data loss
+      if (err.code !== noSuchFile) {
+        this.locked = true;
+        this.logger.error('Failed to read package database file, please check the error printed below:\n', `File Path: ${this.path}\n\n ${err.message}`);
+      }
+
+      return emptyDatabase;
+    }
+  }
+
+  private getTokenDb(): Level {
+    if (!this.tokenDb) {
+      this.tokenDb = level(this._dbGenPath(TOKEN_DB_NAME, this.config), {
+        valueEncoding: 'json'
+      });
+    }
+
+    return this.tokenDb;
   }
 
   private _getTokenKey(token: Token): string {

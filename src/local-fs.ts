@@ -82,14 +82,14 @@ export default class LocalFS implements ILocalFSPackageManager {
       let locked = false;
       const self = this;
       // callback that cleans up lock first
-      const unLockCallback = (lockError: Error) => {
+      const unLockCallback = function(lockError: Error) {
         const _args = arguments;
 
         if (locked) {
           self._unlockJSON(pkgFileName, () => {
             // ignore any error from the unlock
             if (lockError !== null) {
-              this.logger.trace(
+              self.logger.trace(
                 {
                   name,
                   lockError
@@ -101,7 +101,7 @@ export default class LocalFS implements ILocalFSPackageManager {
             onEnd.apply(lockError, _args);
           });
         } else {
-          this.logger.trace({ name }, '[local-storage/updatePackage/unLockCallback] file: @{name} has been updated');
+          self.logger.trace({ name }, '[local-storage/updatePackage/unLockCallback] file: @{name} has been updated');
 
           onEnd(..._args);
         }
@@ -195,7 +195,8 @@ export default class LocalFS implements ILocalFSPackageManager {
 
     const pathName: string = this._getStorage(name);
 
-    fs.exists(pathName, exists => {
+    fs.access(pathName, (fileNotFound) => {
+      const exists = !fileNotFound;
       if (exists) {
         uploadStream.emit('error', fSError(fileExist));
       } else {
@@ -286,11 +287,13 @@ export default class LocalFS implements ILocalFSPackageManager {
   private _createFile(name: string, contents: any, callback: Function) {
     this.logger.trace({ name }, '[local-storage/_createFile] create a new file: @{name}');
 
-    fs.exists(name, exists => {
-      if (exists) {
-        this.logger.trace({ name }, '[local-storage/_createFile] file cannot be created, it already exists: @{name}');
-
-        return callback(fSError(fileExist));
+    fs.open(name, 'wx', err => {
+      if (err) {
+        // native EEXIST used here to check exception on fs.open
+        if (err.code === 'EEXIST') {
+          this.logger.trace({ name }, '[local-storage/_createFile] file cannot be created, it already exists: @{name}');
+          return callback(fSError(fileExist));
+        }
       }
 
       this._writeFile(name, contents, callback);

@@ -143,10 +143,10 @@ describe('Local Database', () => {
     };
 
     test('should find scoped packages', done => {
-      const nonScopedPackages = ['@pkg1/test'];
+      const scopedPackages = ['@pkg1/test'];
       const stats = { mtime: new Date() };
       jest.spyOn(fs, 'stat').mockImplementation((_, cb) => cb(null, stats as fs.Stats));
-      jest.spyOn(fs, 'readdir').mockImplementation((storePath, cb) => cb(null, storePath.match('test-storage') ? nonScopedPackages : []));
+      jest.spyOn(fs, 'readdir').mockImplementation((storePath, cb) => cb(null, storePath.match('test-storage') ? scopedPackages : []));
 
       callSearch(locaDatabase, 1, done);
     });
@@ -169,8 +169,6 @@ describe('Local Database', () => {
     });
 
     test('should fails on read the storage', done => {
-      const stats = { mtime: new Date() };
-      jest.spyOn(fs, 'stat').mockImplementation((_, cb) => cb(null, stats as fs.Stats));
       jest.spyOn(fs, 'readdir').mockImplementation((_, cb) => cb(Error('fails'), null));
 
       const db = new LocalDatabase(
