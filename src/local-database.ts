@@ -16,7 +16,7 @@ import { getInternalError } from '@verdaccio/commons-api/lib';
 
 const DEPRECATED_DB_NAME = '.sinopia-db.json';
 const DB_NAME = '.verdaccio-db.json';
-const TOKEN_DB_NAME = 'token-db';
+const TOKEN_DB_NAME = '.token-db';
 
 interface Level {
   put(key: string, token, fn?: Function): void;
@@ -404,7 +404,9 @@ class LocalDatabase implements IPluginStorage<{}> {
         lte: String.fromCharCode(key.charCodeAt(0) + 1)
       });
 
-      stream.on('data', data => tokens.push(data));
+      stream.on('data', data => {
+        tokens.push(data.value);
+      });
 
       stream.once('end', () => resolve(tokens));
 
