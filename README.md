@@ -1,3 +1,10 @@
+## Deprecated repository
+
+**This repository has been moved to a monorepo you can find in [verdaccio/monorepo](https://github.com/verdaccio/monorepo). This package is located in [`plugins/local-storage` folder](https://github.com/verdaccio/monorepo/tree/master/plugins/local-storage)**
+
+---
+
+
 # @verdaccio/local-storage
 
 📦 File system storage plugin for verdaccio 
